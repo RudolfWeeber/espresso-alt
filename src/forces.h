@@ -227,6 +227,11 @@ MDINLINE void calc_non_bonded_pair_force_from_partcfg_simple(Particle *p1,Partic
 MDINLINE void add_non_bonded_pair_force(Particle *p1, Particle *p2, 
 					double d[3], double dist, double dist2)
 {
+
+#ifdef COLLISION_DETECTION
+  detect_collision(p1,p2);
+#endif
+
   IA_parameters *ia_params = get_ia_param(p1->p.type,p2->p.type);
   double force[3] = { 0., 0., 0. };
   double torque1[3] = { 0., 0., 0. };
