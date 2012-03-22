@@ -90,8 +90,12 @@ void update_mol_pos_particle(Particle *p)
    #ifdef PARTIAL_PERIODIC
     else p->r.p[i] =new_pos[i];
    #endif
-//   fold_coordinate(p->r.p,p->l.i,i);
-
+   
+   // Set the dipole moment of the virtual particle
+   // based on its dipm-value on the director (quatu) of the real particle
+   if (p->p.dipm>0) {
+    p->r.dip[i] =p_real->r.quatu[i]*p->p.dipm;
+   }
  }
 }
 
@@ -181,11 +185,14 @@ void distribute_mol_force()
        int j;
 //       printf("Particle %d gets torque from %f %f %f of particle %d\n",p_real->p.identity, p[i].f.f[0], p[i].f.f[1],p[i].f.f[2], p[i].p.identity);
        for (j=0;j<3;j++) {
-         p_real->f.torque[j]+=tmp[j];
+         // Add torque contribs from f X r + the torque on the virtual particle
+	 p_real->f.torque[j]+=tmp[j] +p[i].f.torque[j];
 //	 printf("%f ",tmp[j]);
 	 p_real->f.f[j]+=p[i].f.f[j];
 	 // Clear forces on virtual particle
 	 p[i].f.f[j]=0;
+	 // Clear torque on virtual particle
+	 p[i].f.torque[j]=0;
 
        }
       }

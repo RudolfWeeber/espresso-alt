@@ -199,12 +199,14 @@ MDINLINE void friction_thermo_langevin_rotation(Particle *p)
   int j;
 #ifdef VIRTUAL_SITES
  #ifndef VIRTUAL_SITES_THERMOSTAT
-    if (ifParticleIsVirtual(p))
-    {
-     for (j=0;j<3;j++)
-      p->f.torque[j]=0;
-    return;
-   }
+    // With virtual sites, the torques are cleared, when they have been transferred
+    // to the associated real particle. So we don't clear them here.
+//    if (ifParticleIsVirtual(p))
+//    {
+//     for (j=0;j<3;j++)
+//      p->f.torque[j]=0;
+//    return;
+//   }
  #endif
 
  #ifdef THERMOSTAT_IGNORE_NON_VIRTUAL

@@ -28,6 +28,7 @@
 static int tclcommand_code_info_version(Tcl_Interp *interp)
 {
   Tcl_AppendResult(interp, PACKAGE_NAME, "-", ESPRESSO_VERSION, (char *) NULL);
+  Tcl_AppendResult(interp, "Special version for shifted dipoles", (char *) NULL);
   return (TCL_OK);
 }
 
