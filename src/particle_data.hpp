@@ -128,6 +128,8 @@ typedef struct {
   */
   int vs_relative_to_particle_id;
   double vs_relative_distance;
+  // Store relative position of the virtual site
+  double vs_relative_rel_orientation[4];
   #endif
 #endif
 
@@ -590,6 +592,9 @@ int set_particle_dipm(int part, double dipm);
     @return ES_OK if particle existed
 */
 int set_particle_virtual(int part,int isVirtual);
+#endif
+#ifdef VIRTUAL_SITES_RELATIVE
+int set_particle_vs_relative(int part, int vs_relative_to, double vs_distance, double* rel_ori);
 #endif
 
 #ifdef LANGEVIN_PER_PARTICLE
