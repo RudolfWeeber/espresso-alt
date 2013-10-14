@@ -70,6 +70,8 @@ extern double temperature;
 /** Langevin friction coefficient gamma. */
 extern double langevin_gamma;
 
+/** Langevin friction coefficient gamma for rotation. */
+extern double langevin_gamma_rotation;
 /** Friction coefficient for nptiso-thermostat's inline-function friction_therm0_nptiso */
 extern double nptiso_gamma0;
 /** Friction coefficient for nptiso-thermostat's inline-function friction_thermV_nptiso */
@@ -142,7 +144,7 @@ inline double friction_thermV_nptiso(double p_diff) {
 */
 inline void friction_thermo_langevin(Particle *p)
 {
-  extern double langevin_pref1, langevin_pref2;
+  extern double langevin_pref1, langevin_pref2,langevin_pref2_rotation;
 #ifdef LANGEVIN_PER_PARTICLE
   double langevin_pref1_temp, langevin_pref2_temp;
 #endif
@@ -274,7 +276,7 @@ inline void friction_thermo_langevin(Particle *p)
 */
 inline void friction_thermo_langevin_rotation(Particle *p)
 {
-  extern double langevin_pref2;
+  extern double langevin_pref2,langevin_pref2_rotation;
 
   int j;
 #ifdef VIRTUAL_SITES
@@ -312,9 +314,10 @@ inline void friction_thermo_langevin_rotation(Particle *p)
         #endif
 #elif defined (GAUSSRANDOM)
         #ifdef ROTATIONAL_INERTIA
-        p->f.torque[j] = -langevin_gamma*p->m.omega[j] *p->p.rinertia[j] + langevin_pref2*sqrt(p->p.rinertia[j]) * gaussian_random();
+<<<<<<< HEAD
+        p->f.torque[j] = -langevin_gamma_rotation*p->m.omega[j] *p->p.rinertia[j] + langevin_pref2*sqrt(p->p.rinertia[j]) * gaussian_random();
         #else
-        p->f.torque[j] = -langevin_gamma*p->m.omega[j] + langevin_pref2*gaussian_random();
+        p->f.torque[j] = -langevin_gamma_rotation*p->m.omega[j] + langevin_pref2*gaussian_random();
         #endif
 #else
 #error No Noise defined

@@ -50,6 +50,10 @@ int tclcommand_thermostat_parse_off(Tcl_Interp *interp, int argc, char **argv)
   /* langevin thermostat */
   langevin_gamma = 0;
   mpi_bcast_parameter(FIELD_LANGEVIN_GAMMA);
+  #ifdef ROTATION
+   mpi_bcast_parameter(FIELD_LANGEVIN_GAMMA_ROTATION);
+  #endif
+
   /* dpd thermostat */
 #ifdef DPD
   dpd_switch_off();
@@ -83,40 +87,75 @@ int tclcommand_thermostat_parse_off(Tcl_Interp *interp, int argc, char **argv)
 
 int tclcommand_thermostat_parse_langevin(Tcl_Interp *interp, int argc, char **argv) 
 {
-  double temp, gamma;
+  double temp, gamma, gamma_rot;
 
   /* check number of arguments */
+  #ifdef ROTATION
+  if (argc < 4) {
+    Tcl_AppendResult(interp, "wrong # args:  should be \n\"",
+		     argv[0]," ",argv[1]," <temp> <gamma> [<gamma_rotation>]\"", (char *)NULL);
+    return (TCL_ERROR);
+  }
+  #else
   if (argc < 4) {
     Tcl_AppendResult(interp, "wrong # args:  should be \n\"",
 		     argv[0]," ",argv[1]," <temp> <gamma>\"", (char *)NULL);
     return (TCL_ERROR);
   }
+  #endif
 
   /* check argument types */
   if ( !ARG_IS_D(2, temp) || !ARG_IS_D(3, gamma)) {
     Tcl_AppendResult(interp, argv[0]," ",argv[1]," needs two DOUBLES", (char *)NULL);
     return (TCL_ERROR);
   }
+  #ifdef ROTATION
+  if (argc==4)
+  {
+   gamma_rot=gamma;
+   printf("Notice: Rotational gamma set to %f\n",gamma_rot);
+  }
+  else
+    if ( !ARG_IS_D(4, gamma_rot)) {
+      Tcl_AppendResult(interp, argv[0]," ",argv[1]," value for rotational gamma not a double", (char *)NULL);
+      return (TCL_ERROR);
+    }
+  #endif
+
 
   if (temp < 0 || gamma < 0) {
     Tcl_AppendResult(interp, "temperature and gamma must be positive", (char *)NULL);
     return (TCL_ERROR);
   }
+  #ifdef ROTATION
+  if (gamma_rot < 0) {
+    Tcl_AppendResult(interp, "Rotational gamma must be larger than zero.", (char *)NULL);
+    return (TCL_ERROR);
+  }
+  #endif
+
 
   /* broadcast parameters */
   temperature = temp;
   langevin_gamma = gamma;
+  #ifdef ROTATION
+    langevin_gamma_rotation = gamma_rot;
+  #endif
+   
   thermo_switch = ( thermo_switch | THERMO_LANGEVIN );
   mpi_bcast_parameter(FIELD_THERMO_SWITCH);
   mpi_bcast_parameter(FIELD_TEMPERATURE);
   mpi_bcast_parameter(FIELD_LANGEVIN_GAMMA);
+  #ifdef ROTATION
+   mpi_bcast_parameter(FIELD_LANGEVIN_GAMMA_ROTATION);
+  #endif
   return (TCL_OK);
 }
 
 #ifdef NPT
 int tclcommand_thermostat_parse_npt_isotropic(Tcl_Interp *interp, int argc, char **argv) 
 {
-  double temp, gamma0, gammav;
+  double temp, gamma0, gammav, gamma_rot;
   /* check number of arguments */
   if (argc < 5) {
     Tcl_AppendResult(interp, "wrong # args:  should be \n\"",
@@ -128,6 +167,21 @@ int tclcommand_thermostat_parse_npt_isotropic(Tcl_Interp *interp, int argc, char
     Tcl_AppendResult(interp, argv[0]," ",argv[1]," needs four DOUBLES", (char *)NULL);
     return (TCL_ERROR);
   }
+  #ifdef ROTATION
+  if (argc==5)
+  {
+   gamma_rot=gamma;
+   printf("Notice: Rotational gamma set to %f\n",gamma_rot)
+  }
+  else
+    if ( !ARG_IS_D(5, gamma_rot)) ) {
+      Tcl_AppendResult(interp, argv[0]," ",argv[1]," rotational gamma needs to be a double", (char *)NULL);
+      return (TCL_ERROR);
+    }
+  #endif
+
+
+
   /* broadcast parameters */
   temperature = temp;
   nptiso_gamma0 = gamma0;
@@ -137,6 +191,9 @@ int tclcommand_thermostat_parse_npt_isotropic(Tcl_Interp *interp, int argc, char
   mpi_bcast_parameter(FIELD_THERMO_SWITCH);
   mpi_bcast_parameter(FIELD_TEMPERATURE);
   mpi_bcast_parameter(FIELD_NPTISO_G0);
+  #ifdef ROTATION
+   mpi_bcast_parameter(FIELD_LANGEVIN_GAMMA_ROTATION);
+  #endif
   mpi_bcast_parameter(FIELD_NPTISO_GV);
   return (TCL_OK);
 }
@@ -232,7 +289,12 @@ int tclcommand_thermostat_print_all(Tcl_Interp *interp)
     Tcl_PrintDouble(interp, temperature, buffer);
     Tcl_AppendResult(interp,"{ langevin ",buffer, (char *)NULL);
     Tcl_PrintDouble(interp, langevin_gamma, buffer);
-    Tcl_AppendResult(interp," ",buffer," } ", (char *)NULL);
+    Tcl_AppendResult(interp," ",buffer,(char *)NULL);
+    #ifdef ROTATION
+      Tcl_PrintDouble(interp, langevin_gamma_rotation, buffer);
+      Tcl_AppendResult(interp," ",buffer," ", (char *)NULL);
+    #endif
+    Tcl_AppendResult(interp," }",(char *)NULL);
   }
     
 #ifdef DPD
@@ -248,7 +310,12 @@ int tclcommand_thermostat_print_all(Tcl_Interp *interp)
     Tcl_PrintDouble(interp, nptiso_gamma0, buffer);
     Tcl_AppendResult(interp," ",buffer, (char *)NULL);
     Tcl_PrintDouble(interp, nptiso_gammav, buffer);
-    Tcl_AppendResult(interp," ",buffer, " } ", (char *)NULL);
+    Tcl_AppendResult(interp," ",buffer,  (char *)NULL);
+    #ifdef ROTATION
+      Tcl_PrintDouble(interp, langevin_gamma_rotation, buffer);
+      Tcl_AppendResult(interp," ",buffer," ", (char *)NULL);
+    #endif
+    Tcl_AppendResult(interp," }", (char *)NULL);
   }
 #endif
 
