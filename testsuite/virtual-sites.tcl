@@ -153,6 +153,7 @@ if {[setmd max_range] > 0.45 + [setmd skin] + 0.001} {
 }
 puts "OK: max cut is [setmd max_range], should not be bigger than 0.45 + [setmd skin]"
 
+setmd min_global_cut 1
 part 0 pos 2 2 2 v -1 0 0 type 0
 part 1 pos 1.8 2 2 virtual 1 vs_auto_relate_to 0 q 1 type 1
 part 2 pos 2.2 2 2 virtual 1 vs_auto_relate_to 0 q 1 type 1
@@ -163,6 +164,7 @@ for {set i 0} {$i<10000} {incr i } {
  integrate 1 
  if { ([analyze energy coulomb] <1.5) || ([analyze energy nonbonded 1 1 ] < 12) } {
   puts "$i [analyze energy coulomb] [analyze energy nonbonded 1 1]"
+  puts "[analyze energy]"
   puts "Error: Lost interaction between particles"
   set error 1
  }
