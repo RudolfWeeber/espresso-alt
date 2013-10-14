@@ -270,6 +270,8 @@ void init_particle(Particle *part)
 #ifdef VIRTUAL_SITES_RELATIVE
   part->p.vs_relative_to_particle_id      = 0;
   part->p.vs_relative_distance =0;
+  for (int i=0; i<4; i++) 
+   part->p.vs_relative_rel_orientation[i] =0;
 #endif
 
 #ifdef GHOST_FLAG
@@ -742,7 +744,7 @@ int set_particle_virtual(int part, int isVirtual)
 #endif
 
 #ifdef VIRTUAL_SITES_RELATIVE
-int set_particle_vs_relative(int part, int vs_relative_to, double vs_distance)
+int set_particle_vs_relative(int part, int vs_relative_to, double vs_distance, double* rel_ori)
 {
   // Find out, on what node the particle is
   int pnode;
@@ -757,7 +759,7 @@ int set_particle_vs_relative(int part, int vs_relative_to, double vs_distance)
     return ES_ERROR;
   
   // Send the stuff
-  mpi_send_vs_relative(pnode, part, vs_relative_to, vs_distance);
+  mpi_send_vs_relative(pnode, part, vs_relative_to, vs_distance,rel_ori);
   return ES_OK;
 }
 #endif
