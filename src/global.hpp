@@ -178,6 +178,8 @@ extern const Datafield fields[];
 #define FIELD_GHMC_SCALE          50 
 /** index of \ref lb_components in \ref #fields */
 #define FIELD_LB_COMPONENTS       51 
+/** index of \ref langevin_gamma_rotation in  \ref #fields */
+#define FIELD_LANGEVIN_GAMMA_ROTATION      52
 /*@}*/
 
 #endif

@@ -92,5 +92,6 @@ const Datafield fields[] = {
   {&ghmc_mflip,      TYPE_INT,    1, "ghmc_mflip",        7 },         /* 49 from ghmc.c */
   {&ghmc_tscale,     TYPE_INT,    1, "ghmc_tscale",       6 },         /* 50 from ghmc.c */
   {&lb_components,   TYPE_INT,    1, "lb_components",     2 },         /* 51 from ghmc.c */
+  {&langevin_gamma_rotation,  TYPE_DOUBLE, 1, "gamma_rot",             1 },         /* 52  from thermostat.c */
   { NULL, 0, 0, NULL, 0 }
 };

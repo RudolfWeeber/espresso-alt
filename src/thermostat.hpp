@@ -66,6 +66,8 @@ extern double temperature;
 /** Langevin friction coefficient gamma. */
 extern double langevin_gamma;
 
+/** Langevin friction coefficient gamma for rotation. */
+extern double langevin_gamma_rotation;
 /** Friction coefficient for nptiso-thermostat's inline-function friction_therm0_nptiso */
 extern double nptiso_gamma0;
 /** Friction coefficient for nptiso-thermostat's inline-function friction_thermV_nptiso */
@@ -122,7 +124,7 @@ inline double friction_thermV_nptiso(double p_diff) {
 */
 inline void friction_thermo_langevin(Particle *p)
 {
-  extern double langevin_pref1, langevin_pref2;
+  extern double langevin_pref1, langevin_pref2,langevin_pref2_rotation;
 #ifdef LANGEVIN_PER_PARTICLE
   double langevin_pref1_temp, langevin_pref2_temp;
 #endif
@@ -200,7 +202,7 @@ inline void friction_thermo_langevin(Particle *p)
 */
 inline void friction_thermo_langevin_rotation(Particle *p)
 {
-  extern double langevin_pref2;
+  extern double langevin_pref2,langevin_pref2_rotation;
 
   int j;
 #ifdef VIRTUAL_SITES
@@ -225,9 +227,9 @@ inline void friction_thermo_langevin_rotation(Particle *p)
       for ( j = 0 ; j < 3 ; j++) 
       {
         #ifdef ROTATIONAL_INERTIA
-	 p->f.torque[j] = -langevin_gamma*p->m.omega[j] *p->p.rinertia[j] + langevin_pref2*sqrt(p->p.rinertia[j]) * (d_random()-0.5);
+	 p->f.torque[j] = -langevin_gamma_rotation*p->m.omega[j] *p->p.rinertia[j] + langevin_pref2_rotation*sqrt(p->p.rinertia[j]) * (d_random()-0.5);
       	#else
-	 p->f.torque[j] = -langevin_gamma*p->m.omega[j] + langevin_pref2*(d_random()-0.5);
+	 p->f.torque[j] = -langevin_gamma_rotation*p->m.omega[j] + langevin_pref2_rotation*(d_random()-0.5);
 	#endif
       }
       ONEPART_TRACE(if(p->p.identity==check_id) fprintf(stderr,"%d: OPT: LANG f = (%.3e,%.3e,%.3e)\n",this_node,p->f.f[0],p->f.f[1],p->f.f[2]));
