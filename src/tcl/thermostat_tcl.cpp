@@ -171,11 +171,11 @@ int tclcommand_thermostat_parse_npt_isotropic(Tcl_Interp *interp, int argc, char
   #ifdef ROTATION
   if (argc==5)
   {
-   gamma_rot=gamma;
-   printf("Notice: Rotational gamma set to %f\n",gamma_rot)
+   gamma_rot=gamma0;
+   printf("Notice: Rotational gamma set to %f\n",gamma_rot);
   }
   else
-    if ( !ARG_IS_D(5, gamma_rot)) ) {
+    if ( !ARG_IS_D(5, gamma_rot))  {
       Tcl_AppendResult(interp, argv[0]," ",argv[1]," rotational gamma needs to be a double", (char *)NULL);
       return (TCL_ERROR);
     }
