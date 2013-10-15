@@ -141,6 +141,9 @@ typedef struct {
 #ifdef LANGEVIN_PER_PARTICLE
   double T;
   double gamma;
+ #ifdef ROTATION
+  double gamma_rotation;
+ #endif
 #endif
 
 #ifdef CATALYTIC_REACTIONS
@@ -611,6 +614,15 @@ int set_particle_temperature(int part, double T);
     @return ES_OK if particle existed
 */
 int set_particle_gamma(int part, double gamma);
+
+#ifdef ROTATION
+/** Call only on the master node: set particle rotation frictional coefficient.
+    @param part the particle.
+    @param gamma_rotation its new rotation frictional coefficient.
+    @return ES_OK if particle existed
+*/
+int set_particle_gamma_rotation(int part, double gamma_rotation);
+#endif
 #endif
 
 #ifdef EXTERNAL_FORCES

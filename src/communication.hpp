@@ -416,6 +416,11 @@ void mpi_set_particle_temperature(int pnode, int part, double _T);
 
 /** Issue REQ_SEND_PARTICLE_T: send particle type specific frictional coefficient. */
 void mpi_set_particle_gamma(int pnode, int part, double gamma);
+
+/** Issue REQ_SEND_PARTICLE_T: send particle type specific rotation frictional coefficient. */
+#ifdef ROTATION
+void mpi_set_particle_gamma_rotation(int pnode, int part, double gamma_rotation);
+#endif
 #endif
 
 /** Issue REQ_BCAST_COULOMB: send new coulomb parameters. */

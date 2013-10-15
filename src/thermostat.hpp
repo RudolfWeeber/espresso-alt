@@ -277,6 +277,9 @@ inline void friction_thermo_langevin(Particle *p)
 inline void friction_thermo_langevin_rotation(Particle *p)
 {
   extern double langevin_pref2,langevin_pref2_rotation;
+#ifdef LANGEVIN_PER_PARTICLE
+  double langevin_pref2_temp,langevin_pref2_rotation_temp;
+#endif
 
   int j;
 #ifdef VIRTUAL_SITES
@@ -297,7 +300,43 @@ inline void friction_thermo_langevin_rotation(Particle *p)
     return;
    }
  #endif
-#endif	  
+#endif	 
+#ifdef LANGEVIN_PER_PARTICLE 
+      if(p->p.T >= 0.) {
+        if(p->p.gamma_rotation >= 0.)
+	  langevin_pref2_rotation_temp = sqrt(24.0*p->p.T*p->p.gamma_rotation/time_step);
+	else
+	  langevin_pref2_rotation_temp = sqrt(24.0*p->p.T*langevin_gamma_rotation/time_step);
+	if(p->p.gamma >= 0.)
+	  langevin_pref2_temp = sqrt(24.0*p->p.T*p->p.gamma/time_step);
+	else
+	  langevin_pref2_temp = sqrt(24.0*p->p.T*langevin_gamma/time_step);
+      }
+      else {
+        if(p->p.gamma_rotation >= 0.)
+	  langevin_pref2_rotation_temp = sqrt(24.0*temperature*p->p.gamma_rotation/time_step);
+	else
+	  langevin_pref2_rotation_temp = langevin_pref2_rotation;
+	if(p->p.gamma >= 0.)
+	  langevin_pref2_temp = sqrt(24.0*temperature*p->p.gamma/time_step);
+	else
+	  langevin_pref2_temp = langevin_pref2;
+      }
+      for ( j = 0 ; j < 3 ; j++) 
+      {
+        #ifdef ROTATIONAL_INERTIA
+	if(p->p.gamma_rotation >= 0.)
+	 p->f.torque[j] = -p->p.gamma_rotation*p->m.omega[j] *p->p.rinertia[j] + langevin_pref2_rotation_temp*sqrt(p->p.rinertia[j]) * (d_random()-0.5);
+	else
+	 p->f.torque[j] = -langevin_gamma_rotation*p->m.omega[j] *p->p.rinertia[j] + langevin_pref2_rotation_temp*sqrt(p->p.rinertia[j]) * (d_random()-0.5);
+      	#else
+	if(p->p.gamma_rotation >= 0.)
+	 p->f.torque[j] = -p->p.gamma_rotation*p->m.omega[j] + langevin_pref2_rotation_temp*(d_random()-0.5);
+	else
+	 p->f.torque[j] = -langevin_gamma_rotation*p->m.omega[j] + langevin_pref2_rotation_temp*(d_random()-0.5);
+	#endif
+      }
+#else
       for ( j = 0 ; j < 3 ; j++) 
       {
 #if defined (FLATNOISE)
@@ -323,6 +362,7 @@ inline void friction_thermo_langevin_rotation(Particle *p)
 #error No Noise defined
 #endif
       }
+#endif
       ONEPART_TRACE(if(p->p.identity==check_id) fprintf(stderr,"%d: OPT: LANG f = (%.3e,%.3e,%.3e)\n",this_node,p->f.f[0],p->f.f[1],p->f.f[2]));
       THERMO_TRACE(fprintf(stderr,"%d: Thermo: P %d: force=(%.3e,%.3e,%.3e)\n",this_node,p->p.identity,p->f.f[0],p->f.f[1],p->f.f[2]));
 }
