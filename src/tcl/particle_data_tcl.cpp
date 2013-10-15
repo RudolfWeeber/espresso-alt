@@ -200,20 +200,20 @@ void tclcommand_part_print_mu_E(Particle *part, char *buffer, Tcl_Interp *interp
 #ifdef LANGEVIN_PER_PARTICLE
 void tclcommand_part_print_temp(Particle *part, char *buffer, Tcl_Interp *interp)
 {
-  sprintf(buffer,"%d", part->p.T);
+  sprintf(buffer,"%f", part->p.T);
   Tcl_AppendResult(interp, buffer, (char *)NULL);
 }
 
 void tclcommand_part_print_gamma(Particle *part, char *buffer, Tcl_Interp *interp)
 {
-  sprintf(buffer,"%d", part->p.gamma);
+  sprintf(buffer,"%f", part->p.gamma);
   Tcl_AppendResult(interp, buffer, (char *)NULL);
 }
 
 #ifdef ROTATION
 void tclcommand_part_print_gamma_rotation(Particle *part, char *buffer, Tcl_Interp *interp)
 {
-  sprintf(buffer,"%d", part->p.gamma_rotation);
+  sprintf(buffer,"%f", part->p.gamma_rotation);
   Tcl_AppendResult(interp, buffer, (char *)NULL);
 }
 #endif
@@ -756,6 +756,18 @@ int tclcommand_part_parse_print(Tcl_Interp *interp, int argc, char **argv,
     else if (ARG0_IS_S("fix"))
       tclcommand_part_print_fix(&part, buffer, interp);
 #endif
+#ifdef LANGEVIN_PER_PARTICLE
+    else if (ARG0_IS_S("T"))
+      tclcommand_part_print_temp(&part, buffer, interp);
+    else if (ARG0_IS_S("gamma"))
+      tclcommand_part_print_gamma(&part, buffer, interp);
+#ifdef ROTATION
+    else if (ARG0_IS_S_EXACT("gamma_rotation"))
+      tclcommand_part_print_gamma_rotation(&part, buffer, interp);
+#endif
+#endif
+
+
 
 #ifdef EXCLUSIONS
     else if (ARG0_IS_S("exclusions"))
