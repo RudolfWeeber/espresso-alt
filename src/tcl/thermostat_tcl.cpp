@@ -51,6 +51,7 @@ int tclcommand_thermostat_parse_off(Tcl_Interp *interp, int argc, char **argv)
   langevin_gamma = 0;
   mpi_bcast_parameter(FIELD_LANGEVIN_GAMMA);
   #ifdef ROTATION
+   langevin_gamma_rotation = 0;
    mpi_bcast_parameter(FIELD_LANGEVIN_GAMMA_ROTATION);
   #endif
 

@@ -197,6 +197,28 @@ void tclcommand_part_print_mu_E(Particle *part, char *buffer, Tcl_Interp *interp
 }
 #endif
 
+#ifdef LANGEVIN_PER_PARTICLE
+void tclcommand_part_print_temp(Particle *part, char *buffer, Tcl_Interp *interp)
+{
+  sprintf(buffer,"%d", part->p.T);
+  Tcl_AppendResult(interp, buffer, (char *)NULL);
+}
+
+void tclcommand_part_print_gamma(Particle *part, char *buffer, Tcl_Interp *interp)
+{
+  sprintf(buffer,"%d", part->p.gamma);
+  Tcl_AppendResult(interp, buffer, (char *)NULL);
+}
+
+#ifdef ROTATION
+void tclcommand_part_print_gamma_rotation(Particle *part, char *buffer, Tcl_Interp *interp)
+{
+  sprintf(buffer,"%d", part->p.gamma_rotation);
+  Tcl_AppendResult(interp, buffer, (char *)NULL);
+}
+#endif
+#endif
+
 
 #ifdef SHANCHEN
 void tclcommand_part_print_solvation(Particle *part, char *buffer, Tcl_Interp *interp)
@@ -555,6 +577,19 @@ int tclprint_to_result_Particle(Tcl_Interp *interp, int part_num)
     Tcl_AppendResult(interp, " fix ", (char *)NULL);
     tclcommand_part_print_fix(&part, buffer, interp);
   }
+#endif
+
+#ifdef LANGEVIN_PER_PARTICLE
+  /* print information about particle specified temperature and frictino coefficients */
+  Tcl_PrintDouble(interp, part.p.T, buffer);
+  Tcl_AppendResult(interp, " T ", buffer, (char *)NULL);
+
+  Tcl_PrintDouble(interp, part.p.gamma, buffer);
+  Tcl_AppendResult(interp, " gamma ", buffer, (char *)NULL);
+ #ifdef ROTATION
+  Tcl_PrintDouble(interp, part.p.gamma_rotation, buffer);
+  Tcl_AppendResult(interp, " gamma_rotation ", buffer, (char *)NULL);
+ #endif
 #endif
 
   /* print bonding structure */
@@ -1634,6 +1669,31 @@ int part_parse_gamma(Tcl_Interp *interp, int argc, char **argv,
   return TCL_OK;
 }
 
+#ifdef ROTATION
+int part_parse_gamma_rotation(Tcl_Interp *interp, int argc, char **argv,
+			 int part_num, int * change)
+{
+  double gamma_rotation;
+
+  *change = 1;
+
+  if (argc < 1) {
+    Tcl_AppendResult(interp, "gamma_rotation requires 1 argument", (char *) NULL);
+    return TCL_ERROR;
+  }
+  /* set temperature scaling factor */
+  if (! ARG_IS_D(0, gamma_rotation))
+    return TCL_ERROR;
+
+  if (set_particle_gamma_rotation(part_num, gamma_rotation) == TCL_ERROR) {
+    Tcl_AppendResult(interp, "set particle position first", (char *)NULL);
+    return TCL_ERROR;
+  }
+
+  return TCL_OK;
+}
+#endif
+
 #endif
 
 #ifdef GRANDCANONICAL
@@ -2204,6 +2264,10 @@ int tclcommand_part_parse_cmd(Tcl_Interp *interp, int argc, char **argv,
       err = part_parse_temp(interp, argc-1, argv+1, part_num, &change);
 	else if (ARG0_IS_S("gamma"))
 	  err = part_parse_gamma(interp, argc-1, argv+1, part_num, &change);
+          #ifdef ROTATION
+	    else if (ARG0_IS_S("gamma_rotation"))
+	      err = part_parse_gamma_rotation(interp, argc-1, argv+1, part_num, &change);
+	  #endif
 #endif
 #ifdef GRANDCANONICAL
 	else if (ARG0_IS_S("gc")) { 

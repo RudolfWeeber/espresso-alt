@@ -285,6 +285,9 @@ void init_particle(Particle *part)
 #ifdef LANGEVIN_PER_PARTICLE
   part->p.T = -1.0;
   part->p.gamma = -1.0;
+ #ifdef ROTATION
+  part->p.gamma_rotation = -1.0;
+ #endif
 #endif
 
 }
@@ -1019,6 +1022,27 @@ int set_particle_gamma(int part, double gamma)
   mpi_set_particle_gamma(pnode, part, gamma);
   return ES_OK;
 }
+
+#ifdef ROTATION
+int set_particle_gamma_rotation(int part, double gamma_rotation)
+{
+  int pnode;
+  
+  if (!particle_node)
+    build_particle_node();
+
+  if (part < 0 || part > max_seen_particle)
+    return ES_ERROR;
+    
+  pnode = particle_node[part];
+
+  if (pnode == -1)
+    return ES_ERROR;
+    
+  mpi_set_particle_gamma_rotation(pnode, part, gamma_rotation);
+  return ES_OK;
+}
+#endif
 #endif
 
 #ifdef EXTERNAL_FORCES
