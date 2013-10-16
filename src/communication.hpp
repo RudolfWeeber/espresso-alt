@@ -239,6 +239,16 @@ void mpi_send_dip(int node, int part, double dip[3]);
     \param dipm its new dipole moment (absolut value).
 */
 void mpi_send_dipm(int node, int part, double dipm);
+
+#ifdef MAGN_ANISOTROPY
+/** Issue REQ_SET_MAGN_ANISO_ENERGY: send particle magnetic anisotropy maximal energy.
+    Also calls \ref on_particle_change.
+    \param part the particle.
+    \param node the node it is attached to.
+    \param magn_aniso_energy its new particle magnetic anisotropy maximal energy.
+*/
+void mpi_send_particle_magn_aniso_energy(int node, int part, double magn_aniso_energy);
+#endif
 #endif
 
 #ifdef VIRTUAL_SITES

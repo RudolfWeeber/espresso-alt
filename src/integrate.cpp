@@ -664,8 +664,11 @@ void propagate_vel()
     p  = cell->part;
     np = cell->n;
     for(i = 0; i < np; i++) {
-#ifdef VIRTUAL_SITES
+#if defined(VIRTUAL_SITES) && !defined(MAGN_ANISOTROPY) 
        if (ifParticleIsVirtual(&p[i])) continue;
+#endif
+#ifdef VIRTUAL_SITES
+	if (!ifParticleIsVirtual(&p[i])) // calculation of the translation DoF is performed only for a "real" particle
 #endif
       for(j=0; j < 3; j++){
 #ifdef EXTERNAL_FORCES
@@ -769,8 +772,11 @@ void propagate_vel_pos()
     p  = cell->part;
     np = cell->n;
     for(i = 0; i < np; i++) {
- #ifdef VIRTUAL_SITES
+ #if defined(VIRTUAL_SITES) && !defined(MAGN_ANISOTROPY)
        if (ifParticleIsVirtual(&p[i])) continue;
+#endif
+#ifdef VIRTUAL_SITES
+	   if (!ifParticleIsVirtual(&p[i]))  // calculation of the translation DoF are performed only for a "real" particle
 #endif
      for(j=0; j < 3; j++){
 #ifdef EXTERNAL_FORCES

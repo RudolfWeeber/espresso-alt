@@ -209,7 +209,7 @@ inline void friction_thermo_langevin_rotation(Particle *p)
 
   int j;
 #ifdef VIRTUAL_SITES
- #ifndef VIRTUAL_SITES_THERMOSTAT
+ #if !defined(VIRTUAL_SITES_THERMOSTAT) && !defined(MAG_ANISOTROPY)
     if (ifParticleIsVirtual(p))
     {
      for (j=0;j<3;j++)

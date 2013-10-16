@@ -94,6 +94,12 @@ void add_ext_magn_field_force(Particle *p1,
 double ext_magn_field_energy(Particle *p1, 
 			     Constraint_ext_magn_field *c);
 
+void add_magn_anisotropy_force(Particle *p1, 
+			      Constraint_magn_anisotropy *c);
+
+double ext_magn_anisotropy_energy(Particle *p1, 
+			     Constraint_magn_anisotropy *c);
+
 void reflect_particle(Particle *p1, double *distance_vec, 
 		      int reflecting);
 

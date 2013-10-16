@@ -155,6 +155,15 @@ void tclcommand_part_print_dip(Particle *part, char *buffer, Tcl_Interp *interp)
   Tcl_PrintDouble(interp, part->r.dip[2], buffer);
   Tcl_AppendResult(interp, buffer, (char *)NULL);
 }
+
+#ifdef MAGN_ANISOTROPY
+void tclcommand_part_print_magn_aniso_energy(Particle *part, char *buffer, Tcl_Interp *interp)
+{
+  sprintf(buffer,"%f", part->p.magn_aniso_energy);
+  Tcl_AppendResult(interp, buffer, (char *)NULL);
+}
+#endif
+
 #endif
 
 #ifdef VIRTUAL_SITES
@@ -521,6 +530,12 @@ int tclprint_to_result_Particle(Tcl_Interp *interp, int part_num)
      reading back fails. */
   Tcl_PrintDouble(interp, part.p.dipm, buffer);
   Tcl_AppendResult(interp, " dipm ", buffer, (char *)NULL);
+
+#ifdef MAGN_ANISOTROPY
+  /* print information about particle magnetic anisotropy maximal energy */
+  Tcl_AppendResult(interp, " magn_aniso_energy ", (char *)NULL);
+  tclcommand_part_print_magn_aniso_energy(&part, buffer, interp);
+#endif
 #endif
 
 #endif
@@ -727,6 +742,12 @@ int tclcommand_part_parse_print(Tcl_Interp *interp, int argc, char **argv,
       Tcl_PrintDouble(interp, part.p.dipm, buffer);
       Tcl_AppendResult(interp, buffer, (char *)NULL);
     }
+#ifdef MAGN_ANISOTROPY
+	else if (ARG0_IS_S("magn_aniso_energy")) {
+	  if (!ifParticleIsVirtual(&part)) tclcommand_part_print_magn_aniso_energy(&part, buffer, interp);
+	  else Tcl_AppendResult(interp, buffer, " magnetic anisotropy defined for a real sites only ", (char *)NULL);
+	}
+#endif
 #endif
 
 #ifdef VIRTUAL_SITES
@@ -1032,6 +1053,33 @@ int tclcommand_part_parse_dip(Tcl_Interp *interp, int argc, char **argv,
   
   return TCL_OK;
 }
+
+#ifdef MAGN_ANISOTROPY
+int tclcommand_part_parse_magn_aniso_energy(Tcl_Interp *interp, int argc, char **argv,
+		 int part_num, int * change)
+{
+    double magn_aniso_energy;
+
+    *change = 1;
+
+    if (argc < 1) {
+      Tcl_AppendResult(interp, "magn_aniso_energy requires 1 argument", (char *) NULL);
+      return TCL_ERROR;
+    }
+
+    /* set dipole moment */
+    if (! ARG0_IS_D(magn_aniso_energy))
+      return TCL_ERROR;
+
+	if (set_particle_magn_aniso_energy(part_num, magn_aniso_energy) == TCL_ERROR) {
+      Tcl_AppendResult(interp, "set particle position first", (char *)NULL);
+
+      return TCL_ERROR;
+    }
+
+    return TCL_OK;
+}
+#endif
 
 #endif
 
@@ -2208,6 +2256,10 @@ int tclcommand_part_parse_cmd(Tcl_Interp *interp, int argc, char **argv,
 
 #ifdef DIPOLES
     else if (ARG0_IS_S("dip")) {
+ #ifdef MAGN_ANISOTROPY
+	Particle *p1 = local_particles[part_num];
+	if (ifParticleIsVirtual(p1)) {
+ #endif
       if (quat_set) {
 	      Tcl_AppendResult(interp, "(vector) dipole and orientation can not be set at the same time", (char *)NULL);	
         return TCL_ERROR;
@@ -2219,8 +2271,19 @@ int tclcommand_part_parse_cmd(Tcl_Interp *interp, int argc, char **argv,
       err = tclcommand_part_parse_dip(interp, argc-1, argv+1, part_num, &change);
       dip_set = 1;
     }
+ #ifdef MAGN_ANISOTROPY
+	else {
+		Tcl_AppendResult(interp, "in case of presence of the magnetic anisotropy the dipole moment should be assigned to the corresponding virtual particle", (char *)NULL);	
+        return TCL_ERROR;
+	}
+	}
+ #endif
 
     else if (ARG0_IS_S("dipm")) {
+ #ifdef MAGN_ANISOTROPY
+	 Particle *p1 = local_particles[part_num];
+	 if (ifParticleIsVirtual(p1)) {
+ #endif
       if (dip_set) {
 	      Tcl_AppendResult(interp, "(vector) dipole and scalar dipole moment can not be set at the same time", (char *)NULL);	
         return TCL_ERROR;
@@ -2228,6 +2291,24 @@ int tclcommand_part_parse_cmd(Tcl_Interp *interp, int argc, char **argv,
       err = tclcommand_part_parse_dipm(interp, argc-1, argv+1, part_num, &change);
       dipm_set = 1;
     }
+ #ifdef MAGN_ANISOTROPY
+	else {
+		Tcl_AppendResult(interp, "in case of presence of the magnetic anisotropy the dipole moment should be assigned to the corresponding virtual particle", (char *)NULL);	
+        return TCL_ERROR;
+	}
+	}
+ #endif
+
+ #ifdef MAGN_ANISOTROPY
+	else if (ARG0_IS_S("magn_aniso_energy")) {
+		Particle *p1 = local_particles[part_num];
+		if (ifParticleIsVirtual(p1)) {
+			Tcl_AppendResult(interp, "magnetic anisotropy energy may be defined for real sites only", (char *)NULL);	
+          return TCL_ERROR;
+		}
+		err = tclcommand_part_parse_magn_aniso_energy(interp, argc-1, argv+1, part_num, &change);
+	}
+ #endif
 
 #endif
 

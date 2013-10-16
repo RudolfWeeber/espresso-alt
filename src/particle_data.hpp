@@ -112,6 +112,10 @@ typedef struct {
 #ifdef DIPOLES
   /** dipole moment (absolute value)*/
   double dipm;
+ #ifdef MAGN_ANISOTROPY
+  /** the strength - maximal energy - of the uniaxial magnetic anisotropy */
+  double magn_aniso_energy;
+ #endif
 #endif
 
 #ifdef VIRTUAL_SITES
@@ -586,6 +590,15 @@ int set_particle_dip(int part, double dip[3]);
     @return ES_OK if particle existed
 */
 int set_particle_dipm(int part, double dipm);
+
+#ifdef MAGN_ANISOTROPY
+/** Call only on the master node: set particle magn.anisotropy maximal energy.
+    @param part the particle.
+    @param magn_aniso_energy its magn.anisotropy maximal energy.
+    @return ES_OK if particle existed
+*/
+int set_particle_magn_aniso_energy(int part, double );
+#endif
 #endif
 
 #ifdef VIRTUAL_SITES

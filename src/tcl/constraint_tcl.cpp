@@ -207,6 +207,12 @@ static int tclprint_to_result_Constraint(Tcl_Interp *interp, int i)
     Tcl_AppendResult(interp, buffer, (char *) NULL);
     break; 
 //end ER
+//ER
+  case CONSTRAINT_MAGN_ANISOTROPY:
+	Tcl_PrintDouble(interp, con->c.magnaniso.magn_anisotropy, buffer);
+    Tcl_AppendResult(interp, "magnetic_anisotropy ", buffer, " ", (char *) NULL);
+    break; 
+//end ER
   case CONSTRAINT_PLANE:
     Tcl_PrintDouble(interp, con->c.plane.pos[0], buffer);
     Tcl_AppendResult(interp, "plane cell ", buffer, " ", (char *) NULL);
@@ -1218,6 +1224,33 @@ int tclcommand_constraint_parse_ext_magn_field(Constraint *con, Tcl_Interp *inte
 }
 //end ER
 
+//ER
+int tclcommand_constraint_parse_magn_enisotropy(Constraint *con, Tcl_Interp *interp,
+		      int argc, char **argv)
+{
+  int i;
+  con->type = CONSTRAINT_MAGN_ANISOTROPY;
+  con->part_rep.p.type=-1;
+
+  con->c.magnaniso.magn_anisotropy = 0.;
+
+  if(argc < 1) {
+      //Tcl_AppendResult(interp, "usage: constraint magnetic_anisotropy <energy_density> ", (char *) NULL);
+      //return (TCL_ERROR);
+	  Tcl_AppendResult(interp, "the energy density of the magnetic anisotropy are not specified: use magn_aniso_energy properties of the particles", (char *) NULL);
+  } else
+    if (Tcl_GetDouble(interp, argv[0], &(con->c.magnaniso.magn_anisotropy)) == TCL_ERROR)
+	  return (TCL_ERROR);
+  if(argc < 1)
+  { 
+	  argc--; 
+	  argv++;
+  }
+
+  return (TCL_OK);
+}
+//end ER
+
 static int tclcommand_constraint_parse_plane_cell(Constraint *con, Tcl_Interp *interp,
                       int argc, char **argv)
 {
@@ -1475,6 +1508,10 @@ int tclcommand_constraint(ClientData _data, Tcl_Interp *interp,
   //ER
   else if(!strncmp(argv[1], "ext_magn_field", strlen(argv[1]))) {
     status = tclcommand_constraint_parse_ext_magn_field(generate_constraint(),interp, argc - 2, argv + 2);
+    mpi_bcast_constraint(-1);
+  }
+  else if(!strncmp(argv[1], "magnetic_anisotropy", strlen(argv[1]))) {
+	  status = tclcommand_constraint_parse_magn_enisotropy(generate_constraint(),interp, argc - 2, argv + 2);
     mpi_bcast_constraint(-1);
   }
   else if(!strncmp(argv[1], "plane cell", strlen(argv[1]))) {

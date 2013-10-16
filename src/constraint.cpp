@@ -1676,6 +1676,48 @@ double ext_magn_field_energy(Particle *p1, Constraint_ext_magn_field *c)
 }
 //end ER
 
+//ER
+void add_magn_anisotropy_force(Particle *p1, Constraint_magn_anisotropy *c)
+{
+#if defined(ROTATION) && defined(DIPOLES) && defined(MAGN_ANISOTROPY)
+  double cosres, torque_i;
+  Particle* rp1;
+
+  if ((ifParticleIsVirtual(p1)) && (p1->p.dipm>0))
+  {
+	  rp1 = vs_relative_get_real_particle(p1);
+	  cosres = 2.*rp1->p.magn_aniso_energy*scalar(p1->r.quatu,rp1->r.quatu);
+
+	  torque_i = cosres * (p1->r.quatu[1]*rp1->r.quatu[2] - p1->r.quatu[2]*rp1->r.quatu[1]);
+	  p1->f.torque[0] += torque_i;
+	  rp1->f.torque[0] -= torque_i;
+	  torque_i = cosres * (p1->r.quatu[2]*rp1->r.quatu[0] - p1->r.quatu[0]*rp1->r.quatu[2]);
+	  p1->f.torque[1] += torque_i;
+	  rp1->f.torque[1] -= torque_i;
+	  torque_i = cosres * (p1->r.quatu[0]*rp1->r.quatu[1] - p1->r.quatu[1]*rp1->r.quatu[0]);
+	  p1->f.torque[2] += torque_i;
+	  rp1->f.torque[2] -= torque_i;
+  }
+#endif
+}
+
+double ext_magn_anisotropy_energy(Particle *p1, Constraint_magn_anisotropy *c)
+{
+#if defined(ROTATION) && defined(DIPOLES) && defined(MAGN_ANISOTROPY)
+	Particle *rp1;
+	double cosres;
+
+	if ((ifParticleIsVirtual(p1)) && (p1->p.dipm>0))
+	{
+		rp1 = vs_relative_get_real_particle(p1);
+		cosres = scalar(p1->r.quatu,rp1->r.quatu);
+		return -rp1->p.magn_aniso_energy * cosres * cosres;
+	}
+#endif
+  return 0;
+}
+//end ER
+
 void reflect_particle(Particle *p1, double *distance_vec, int reflecting) {
   double vec[3];
   double norm; 
@@ -1950,8 +1992,17 @@ void add_constraints_forces(Particle *p1)
       
 #ifdef DIPOLES
     case CONSTRAINT_EXT_MAGN_FIELD:
-      add_ext_magn_field_force(p1, &constraints[n].c.emfield);
+#ifdef MAGN_ANISOTROPY // if magnetic anisotropy exists the external magnetic field is applied only to the virtual sites with nonzero axes vector
+	  if ( (ifParticleIsVirtual(p1)) && (p1->p.dipm>0) )
+#endif      
+	add_ext_magn_field_force(p1, &constraints[n].c.emfield);
       break;
+#ifdef MAGN_ANISOTROPY
+	case CONSTRAINT_MAGN_ANISOTROPY:
+	  if ( (ifParticleIsVirtual(p1)) && (p1->p.dipm>0) )		  
+		  add_magn_anisotropy_force(p1, &constraints[n].c.magnaniso);
+      break;
+#endif
 #endif
     
     case CONSTRAINT_PLANE:
@@ -2162,8 +2213,17 @@ double add_constraints_energy(Particle *p1)
       coulomb_en = plate_energy(p1, folded_pos, &constraints[n].part_rep, &constraints[n].c.plate);
       break;
     case CONSTRAINT_EXT_MAGN_FIELD:
+#ifdef MAGN_ANISOTROPY
+	  if ((ifParticleIsVirtual(p1)) && (p1->p.dipm>0))
+#endif      
       magnetic_en = ext_magn_field_energy(p1, &constraints[n].c.emfield);
       break;
+#ifdef MAGN_ANISOTROPY
+      case CONSTRAINT_MAGN_ANISOTROPY:
+	if ((ifParticleIsVirtual(p1)) && (p1->p.dipm>0))
+	magnetic_en = ext_magn_anisotropy_energy(p1, &constraints[n].c.magnaniso);
+      break;
+#endif
     }
 
     if (energy.n_coulomb > 0)
