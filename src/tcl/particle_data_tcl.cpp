@@ -148,21 +148,12 @@ void tclcommand_part_print_quatu(Particle *part, char *buffer, Tcl_Interp *inter
 #ifdef DIPOLES
 void tclcommand_part_print_dip(Particle *part, char *buffer, Tcl_Interp *interp)
 {
- #ifdef MAGN_ANISOTROPY
- if (ifParticleIsVirtual(part))
- {
- #endif
   Tcl_PrintDouble(interp, part->r.dip[0], buffer);
   Tcl_AppendResult(interp, buffer, " ", (char *)NULL);
   Tcl_PrintDouble(interp, part->r.dip[1], buffer);
   Tcl_AppendResult(interp, buffer, " ", (char *)NULL);
   Tcl_PrintDouble(interp, part->r.dip[2], buffer);
   Tcl_AppendResult(interp, buffer, (char *)NULL);
- #ifdef MAGN_ANISOTROPY
- } else {
-  Tcl_AppendResult(interp, " dipole moment might may be assigned to virtual sites only", (char *)NULL);
- }
- #endif
 }
 
 #ifdef MAGN_ANISOTROPY
@@ -2332,10 +2323,6 @@ int tclcommand_part_parse_cmd(Tcl_Interp *interp, int argc, char **argv,
 
 #ifdef DIPOLES
     else if (ARG0_IS_S("dip")) {
- #ifdef MAGN_ANISOTROPY
-	Particle *p1 = local_particles[part_num];
-	if (ifParticleIsVirtual(p1)) {
- #endif
       if (quat_set) {
 	      Tcl_AppendResult(interp, "(vector) dipole and orientation can not be set at the same time", (char *)NULL);	
         return TCL_ERROR;
@@ -2347,12 +2334,7 @@ int tclcommand_part_parse_cmd(Tcl_Interp *interp, int argc, char **argv,
       err = tclcommand_part_parse_dip(interp, argc-1, argv+1, part_num, &change);
       dip_set = 1;
     }
- #ifdef MAGN_ANISOTROPY
-	else {
-		Tcl_AppendResult(interp, "in case of presence of the magnetic anisotropy the dipole moment should be assigned to the corresponding virtual particle", (char *)NULL);	
-        return TCL_ERROR;
-	}
-	}
+
  #endif
 
     else if (ARG0_IS_S("dipm")) {
@@ -2392,7 +2374,6 @@ int tclcommand_part_parse_cmd(Tcl_Interp *interp, int argc, char **argv,
 		}
 		err = tclcommand_part_parse_magn_aniso_axis(interp, argc-1, argv+1, part_num, &change);
 	}
- #endif
 
 #endif
 

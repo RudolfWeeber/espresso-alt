@@ -1992,11 +1992,9 @@ void add_constraints_forces(Particle *p1)
       
 #ifdef DIPOLES
     case CONSTRAINT_EXT_MAGN_FIELD:
-#ifdef MAGN_ANISOTROPY // if magnetic anisotropy exists the external magnetic field is applied only to the virtual sites with nonzero axes vector
-	  if ( (ifParticleIsVirtual(p1)) && (p1->p.dipm>0) )
-#endif      
 	add_ext_magn_field_force(p1, &constraints[n].c.emfield);
       break;
+
 #ifdef MAGN_ANISOTROPY
 	case CONSTRAINT_MAGN_ANISOTROPY:
 	  if ( (ifParticleIsVirtual(p1)) && (p1->p.dipm>0) )		  
@@ -2213,9 +2211,6 @@ double add_constraints_energy(Particle *p1)
       coulomb_en = plate_energy(p1, folded_pos, &constraints[n].part_rep, &constraints[n].c.plate);
       break;
     case CONSTRAINT_EXT_MAGN_FIELD:
-#ifdef MAGN_ANISOTROPY
-	  if ((ifParticleIsVirtual(p1)) && (p1->p.dipm>0))
-#endif      
       magnetic_en = ext_magn_field_energy(p1, &constraints[n].c.emfield);
       break;
 #ifdef MAGN_ANISOTROPY
