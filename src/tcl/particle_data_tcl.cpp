@@ -1148,7 +1148,7 @@ int tclcommand_part_parse_magn_aniso_axis(Tcl_Interp *interp, int argc, char **a
   for (int i=0; i<3; i++)
 	  axis[i] /= axisl;
 
-  if (set_particle_dip(part_num, axis) == TCL_ERROR) {
+  if (set_particle_magn_aniso_axis(part_num, axis) == TCL_ERROR) {
     Tcl_AppendResult(interp, "set particle position first", (char *)NULL);
     return TCL_ERROR;
   }

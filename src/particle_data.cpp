@@ -760,7 +760,7 @@ int set_particle_magn_aniso_axis(int part, double axis[3])
 
   if (pnode == -1)
     return ES_ERROR;
-  mpi_send_dip(pnode, part, axis);
+  mpi_send_particle_magn_aniso_axis(pnode, part, axis);
 
   return ES_OK;
 }

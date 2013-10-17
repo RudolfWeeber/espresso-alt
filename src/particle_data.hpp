@@ -597,7 +597,14 @@ int set_particle_dipm(int part, double dipm);
     @param magn_aniso_energy its magn.anisotropy maximal energy.
     @return ES_OK if particle existed
 */
-int set_particle_magn_aniso_energy(int part, double );
+int set_particle_magn_aniso_energy(int part, double magn_aniso_energy);
+
+/** Call only on the master node: set particle magn.anisotropy axis coordinates.
+    @param part the particle.
+    @param magn_aniso_energy its magn.anisotropy axis coordinates.
+    @return ES_OK if particle existed
+*/
+int set_particle_magn_aniso_axis(int part, double axis[3]);
 #endif
 #endif
 
