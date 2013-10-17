@@ -599,14 +599,14 @@ int set_particle_dipm(int part, double dipm);
 */
 int set_particle_magn_aniso_energy(int part, double magn_aniso_energy);
 
-/** Call only on the master node: set particle magn.anisotropy axis coordinates.
+#endif
+#endif
+/** Call only on the master node: set particle quatu (director).
     @param part the particle.
     @param magn_aniso_energy its magn.anisotropy axis coordinates.
     @return ES_OK if particle existed
 */
-int set_particle_magn_aniso_axis(int part, double axis[3]);
-#endif
-#endif
+int set_particle_quatu(int part, double axis[3]);
 
 #ifdef VIRTUAL_SITES
 /** Call only on the master node: set particle dipole moment (absolut value).

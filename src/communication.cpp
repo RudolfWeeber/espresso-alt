@@ -147,7 +147,7 @@ typedef void (SlaveCallback)(int node, int param);
   CB(mpi_setup_reaction_slave) \
   CB(mpi_send_rotation_slave) \
   CB(mpi_send_particle_magn_aniso_energy_slave) \
-  CB(mpi_send_particle_magn_aniso_axis_slave) \
+  CB(mpi_send_particle_quatu_slave) \
 
 // create the forward declarations
 #define CB(name) void name(int node, int param);
@@ -968,16 +968,15 @@ void mpi_send_particle_magn_aniso_energy_slave(int pnode, int part)
 }
 
 /********************* REQ_SET_MAGN_ANISO_AXIS ********/
-#if defined(DIPOLES) && defined(MAGN_ANISOTROPY)
-void mpi_send_particle_magn_aniso_axis(int pnode, int part, double axis[3])
+void mpi_send_particle_quatu(int pnode, int part, double axis[3])
 {
 #ifdef ROTATION
-  mpi_call(mpi_send_particle_magn_aniso_axis_slave, pnode, part);
+  mpi_call(mpi_send_particle_quatu_slave, pnode, part);
 
   if (pnode == this_node) {
     double axisl;
     Particle *p = local_particles[part];
-    convert_dip_to_quat(axis, p->r.quat, &axisl);
+    convert_quatu_to_quat(axis, p->r.quat);
     convert_quat_to_quatu(p->r.quat, p->r.quatu);
  
   }
@@ -988,18 +987,16 @@ void mpi_send_particle_magn_aniso_axis(int pnode, int part, double axis[3])
   on_particle_change();
 #endif 
 }
-#endif
 
-void mpi_send_particle_magn_aniso_axis_slave(int pnode, int part)
+void mpi_send_particle_quatu_slave(int pnode, int part)
 {
-#if defined(DIPOLES) && defined(MAGN_ANISOTROPY) && defined(ROTATION) 
+#if defined(ROTATION) 
   double axisl;
   if (pnode == this_node) {
     Particle *p = local_particles[part];
 	MPI_Recv(p->r.quatu, 3, MPI_DOUBLE, 0, SOME_TAG,
 	     comm_cart, MPI_STATUS_IGNORE);
-    //convert_dip_to_quat(p->r.dip, p->r.quat, &axisl);
-    //convert_quat_to_quatu(p->r.quat, p->r.quatu);
+    convert_quatu_to_quat(p->r.quatu, p->r.quat);
   }
 
   on_particle_change();

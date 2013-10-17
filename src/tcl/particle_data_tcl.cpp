@@ -1107,7 +1107,7 @@ int tclcommand_part_parse_magn_aniso_energy(Tcl_Interp *interp, int argc, char *
     return TCL_OK;
 }
 
-int tclcommand_part_parse_magn_aniso_axis(Tcl_Interp *interp, int argc, char **argv,
+int tclcommand_part_parse_quatu(Tcl_Interp *interp, int argc, char **argv,
 			 int part_num, int * change)
 {
   double axis[3];
@@ -1115,7 +1115,7 @@ int tclcommand_part_parse_magn_aniso_axis(Tcl_Interp *interp, int argc, char **a
   *change = 3;
 
   if (argc < 3) {
-    Tcl_AppendResult(interp, "magn_aniso_axis requires 3 arguments", (char *) NULL);
+    Tcl_AppendResult(interp, "quatu requires 3 arguments", (char *) NULL);
     return TCL_ERROR;
   }
   /* set dipole orientation */
@@ -1131,7 +1131,7 @@ int tclcommand_part_parse_magn_aniso_axis(Tcl_Interp *interp, int argc, char **a
   /* convenience error message, dipm is not used otherwise. */
   axisl = axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2];
   if (axisl < ROUND_ERROR_PREC) {
-    Tcl_AppendResult(interp, "cannot set anisotropy axis with zero length", (char *)NULL);
+    Tcl_AppendResult(interp, "cannot set quatu with zero length", (char *)NULL);
     return TCL_ERROR;
   }
 
@@ -1139,7 +1139,7 @@ int tclcommand_part_parse_magn_aniso_axis(Tcl_Interp *interp, int argc, char **a
   for (int i=0; i<3; i++)
 	  axis[i] /= axisl;
 
-  if (set_particle_magn_aniso_axis(part_num, axis) == TCL_ERROR) {
+  if (set_particle_quatu(part_num, axis) == TCL_ERROR) {
     Tcl_AppendResult(interp, "set particle position first", (char *)NULL);
     return TCL_ERROR;
   }
@@ -2356,13 +2356,9 @@ int tclcommand_part_parse_cmd(Tcl_Interp *interp, int argc, char **argv,
 		}
 		err = tclcommand_part_parse_magn_aniso_energy(interp, argc-1, argv+1, part_num, &change);
 	}
-	else if (ARG0_IS_S("magn_aniso_axis")) {
+	else if (ARG0_IS_S("quatu")) {
 		Particle *p1 = local_particles[part_num];
-		if (ifParticleIsVirtual(p1)) {
-			Tcl_AppendResult(interp, "magnetic anisotropy axis may be defined for real sites only", (char *)NULL);	
-          return TCL_ERROR;
-		}
-		err = tclcommand_part_parse_magn_aniso_axis(interp, argc-1, argv+1, part_num, &change);
+		err = tclcommand_part_parse_quatu(interp, argc-1, argv+1, part_num, &change);
 	}
 
 #endif

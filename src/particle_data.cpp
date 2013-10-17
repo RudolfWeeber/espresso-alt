@@ -747,7 +747,10 @@ int set_particle_magn_aniso_energy(int part, double magn_aniso_energy)
   return ES_OK;
 }
 
-int set_particle_magn_aniso_axis(int part, double axis[3])
+#endif
+#endif
+
+int set_particle_quatu(int part, double axis[3])
 {
   int pnode;
   
@@ -760,13 +763,11 @@ int set_particle_magn_aniso_axis(int part, double axis[3])
 
   if (pnode == -1)
     return ES_ERROR;
-  mpi_send_particle_magn_aniso_axis(pnode, part, axis);
+  mpi_send_particle_quatu(pnode, part, axis);
 
   return ES_OK;
 }
-#endif
 
-#endif
 
 #ifdef VIRTUAL_SITES
 int set_particle_virtual(int part, int isVirtual)

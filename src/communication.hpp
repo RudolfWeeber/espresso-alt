@@ -255,8 +255,11 @@ void mpi_send_particle_magn_aniso_energy(int node, int part, double magn_aniso_e
     \param node the node it is attached to.
     \param magn_aniso_energy its new particle magnetic anisotropy axis coordinates.
 */
-void mpi_send_particle_magn_aniso_axis(int node, int part, double axis[3]);
 #endif
+#endif
+
+#ifdef ROTATION
+ void mpi_send_particle_quatu(int node, int part, double axis[3]);
 #endif
 
 #ifdef VIRTUAL_SITES

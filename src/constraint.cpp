@@ -1683,21 +1683,28 @@ void add_magn_anisotropy_force(Particle *p1, Constraint_magn_anisotropy *c)
   double cosres, torque_i;
   Particle* rp1;
 
-  if ((ifParticleIsVirtual(p1)) && (p1->p.dipm>0))
+  if (ifParticleIsVirtual(p1)) 
   {
+    if  (p1->p.dipm>0)  {
 	  rp1 = vs_relative_get_real_particle(p1);
 	  cosres = 2.*rp1->p.magn_aniso_energy*scalar(p1->r.quatu,rp1->r.quatu);
+	  double torque[3];
+	  vector_product(p1->r.quatu,rp1->r.quatu,torque);
 
-	  torque_i = cosres * (p1->r.quatu[1]*rp1->r.quatu[2] - p1->r.quatu[2]*rp1->r.quatu[1]);
-	  p1->f.torque[0] += torque_i;
-	  rp1->f.torque[0] -= torque_i;
-	  torque_i = cosres * (p1->r.quatu[2]*rp1->r.quatu[0] - p1->r.quatu[0]*rp1->r.quatu[2]);
-	  p1->f.torque[1] += torque_i;
-	  rp1->f.torque[1] -= torque_i;
-	  torque_i = cosres * (p1->r.quatu[0]*rp1->r.quatu[1] - p1->r.quatu[1]*rp1->r.quatu[0]);
-	  p1->f.torque[2] += torque_i;
-	  rp1->f.torque[2] -= torque_i;
+	  for (int i=0;i<3;i++)
+	  {
+	   p1->f.torque[i] += cosres * torque[i];
+	   rp1->f.torque[i] -= cosres * torque[i];
+	  }
+     }
   }
+  else
+   if ((p1->p.isVirtual==0) && (p1->p.dipm>0))
+   {
+	  char* errtxt;
+	  errtxt = runtime_error(128);
+	  ERROR_SPRINTF(errtxt, "Non-virtual particles should not have dipole moments if the magnetic anisotropy constraint is active.");
+   }
 #endif
 }
 
@@ -1997,7 +2004,6 @@ void add_constraints_forces(Particle *p1)
 
 #ifdef MAGN_ANISOTROPY
 	case CONSTRAINT_MAGN_ANISOTROPY:
-	  if ( (ifParticleIsVirtual(p1)) && (p1->p.dipm>0) )		  
 		  add_magn_anisotropy_force(p1, &constraints[n].c.magnaniso);
       break;
 #endif
