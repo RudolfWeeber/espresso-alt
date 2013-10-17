@@ -746,6 +746,24 @@ int set_particle_magn_aniso_energy(int part, double magn_aniso_energy)
   mpi_send_particle_magn_aniso_energy(pnode, part, magn_aniso_energy);
   return ES_OK;
 }
+
+int set_particle_magn_aniso_axis(int part, double axis[3])
+{
+  int pnode;
+  
+  if (!particle_node)
+    build_particle_node();
+
+  if (part < 0 || part > max_seen_particle)
+    return ES_ERROR;
+  pnode = particle_node[part];
+
+  if (pnode == -1)
+    return ES_ERROR;
+  mpi_send_dip(pnode, part, axis);
+
+  return ES_OK;
+}
 #endif
 
 #endif
