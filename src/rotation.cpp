@@ -230,9 +230,7 @@ void propagate_omega_quat_particle(Particle* p)
   convert_quat_to_quatu(p->r.quat, p->r.quatu);
 #ifdef DIPOLES
   // When dipoles are enabled, update dipole moment
-#ifdef MAGN_ANISOTROPY // if particle magnetic anisotropy exists do this only for the virtual particle 
-  if ((ifParticleIsVirtual(p)) && (p->p.dipm>0))
-#endif  
+  if (p->p.dipm>0)
   convert_quatu_to_dip(p->r.quatu, p->p.dipm, p->r.dip);
 #endif
   
