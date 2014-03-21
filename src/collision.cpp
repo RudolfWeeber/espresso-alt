@@ -41,8 +41,8 @@ static int number_of_collisions;
 /// Parameters for collision detection
 Collision_parameters collision_params = { 0, };
 
-int collision_detection_set_params(int mode, double d, int bond_centers,
-				   int bond_vs, int t)
+int collision_detection_set_params(int mode, double d, int bond_centers, int bond_vs,int t, int bond_three_particles)
+
 {
   if (mode & COLLISION_MODE_VS)
     mode |= COLLISION_MODE_BOND;
@@ -75,12 +75,17 @@ int collision_detection_set_params(int mode, double d, int bond_centers,
 				      bonded_ia_params[bond_vs].num == 2))
     return 5;
 
+  if ((mode & COLLISION_MODE_BIND_THREE_PARTICLES) && !(bonded_ia_params[bond_centers].num == 1 &&
+				      		        bonded_ia_params[bond_three_particles].num == 2))
+    return 6;
+
   // Set params
   collision_params.mode=mode;
   collision_params.bond_centers=bond_centers;
   collision_params.bond_vs=bond_vs;
   collision_params.distance=d;
   collision_params.vs_particle_type=t;
+  collision_params.bond_three_particles=bond_three_particles;
 
   make_particle_type_exist(t);
 
@@ -158,7 +163,9 @@ void detect_collision(Particle* p1, Particle* p2)
      we have a new collision */
 
   /* create marking bond between the colliding particles immediately */
-  if (collision_params.mode & COLLISION_MODE_BOND) {
+
+  if (collision_params.mode & COLLISION_MODE_BOND)
+  {
     int bondG[2];
     int primary = part1, secondary = part2;
 #ifdef COLLISION_USE_BROKEN_PARALLELIZATION
@@ -172,6 +179,7 @@ void detect_collision(Particle* p1, Particle* p2)
     bondG[1]=secondary;
     local_change_bond(primary, bondG, 0);
   }
+
 
   if (collision_params.mode & (COLLISION_MODE_VS | COLLISION_MODE_EXCEPTION)) {
     /* If we also create virtual sites or throw an exception, we add the collision
@@ -209,10 +217,10 @@ void prepare_collision_queue()
 // Handle the collisions stored in the queue
 void handle_collisions ()
 {
-  // printf("number of collisions in handle collision are %d\n",number_of_collisions);
+   //printf("number of collisions in handle collision are %d\n",number_of_collisions);
 
   for (int i = 0; i < number_of_collisions; i++) {
-    //  printf("Handling collision of particles %d %d\n", collision_queue[i].pp1, collision_queue[i].pp2);
+      printf("Handling collision of particles %d %d\n", collision_queue[i].pp1, collision_queue[i].pp2);
     //  fflush(stdout);
 
     if (collision_params.mode & (COLLISION_MODE_EXCEPTION)) {
@@ -228,6 +236,7 @@ void handle_collisions ()
 	id1 = collision_queue[i].pp1;
 	id2 = collision_queue[i].pp2;
       }
+
       ERROR_SPRINTF(exceptiontxt, "{collision between particles %d and %d} ",
 		    id1, id2);
     }
@@ -272,6 +281,7 @@ void handle_collisions ()
       }
     }
 #endif
+
   }
 
   // Reset the collision queue

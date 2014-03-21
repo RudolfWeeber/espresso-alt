@@ -44,6 +44,8 @@
     together. This prevents the particles from sliding against each
     other. Requires VIRTUAL_SITES_RELATIVE and COLLISION_MODE_BOND*/
 #define COLLISION_MODE_VS    4
+/// Three particle binding mode
+#define COLLISION_MODE_BIND_THREE_PARTICLES 8
 /*@}*/
 
 typedef struct {
@@ -57,6 +59,8 @@ typedef struct {
   int mode;
   /// distance at which particles are bound
   double distance;
+  /// bond type used for the three-particle bond (angle potential)
+  int bond_three_particles;
 } Collision_parameters;
 
 /// Parameters for collision detection
@@ -80,8 +84,9 @@ void handle_collisions();
     @param bond_vs is the type of the bond between the virtual particles,
     if using noslip bonds
     @param t is the type of the virtual sites, if using noslip bonds
+    @param bond_three_particles is the three-particle-bond parameter
  */
-int collision_detection_set_params(int mode, double d, int bond_centers, int bond_vs,int t);
+int collision_detection_set_params(int mode, double d, int bond_centers, int bond_vs,int t, int bond_three_particles);
 
 #endif
 
