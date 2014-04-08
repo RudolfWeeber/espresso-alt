@@ -41,7 +41,7 @@ static int number_of_collisions;
 /// Parameters for collision detection
 Collision_parameters collision_params = { 0, };
 
-int collision_detection_set_params(int mode, double d, int bond_centers, int bond_vs,int t, int bond_three_particles)
+int collision_detection_set_params(int mode, double d, int bond_centers, int bond_vs,int t, int bond_three_particles, int angle_resolution)
 
 {
   if (mode & COLLISION_MODE_VS)
@@ -75,10 +75,17 @@ int collision_detection_set_params(int mode, double d, int bond_centers, int bon
 				      bonded_ia_params[bond_vs].num == 2))
     return 5;
 
-  if ((mode & COLLISION_MODE_BIND_THREE_PARTICLES) && !(bonded_ia_params[bond_centers].num == 1 &&
-				      		        bonded_ia_params[bond_three_particles].num == 2))
-    return 6;
+  /* Gizem: Check all the bonds and angles. BUT, bond_three_particles is 2, and 
+  three_particle_angle_resolution changes from 0 to 180. I do not understand how to do this */
 
+  
+  for (int i=collision_params.bond_three_particles;1<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution;i++)
+  {
+  // in the check code below, I need to use "i" right?
+  if ((mode & COLLISION_MODE_BIND_THREE_PARTICLES) && !(bonded_ia_params[bond_centers].num == 1 &&
+				      		        bonded_ia_params[bond_three_particles].num + collision_params.three_particle_angle_resolution == i))
+    return 6;
+  }
   // Set params
   collision_params.mode=mode;
   collision_params.bond_centers=bond_centers;
@@ -86,6 +93,7 @@ int collision_detection_set_params(int mode, double d, int bond_centers, int bon
   collision_params.distance=d;
   collision_params.vs_particle_type=t;
   collision_params.bond_three_particles=bond_three_particles;
+  collision_params.three_particle_angle_resolution=angle_resolution;
 
   make_particle_type_exist(t);
 
