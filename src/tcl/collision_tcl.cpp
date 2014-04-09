@@ -57,10 +57,11 @@ int tclcommand_on_collision(ClientData data, Tcl_Interp *interp, int argc, char 
 
     /* Gizem: here, i assume that bond_centers is 2-body potential and 
     bond_three_particles is 3-body potential bonds */
+    /* 25.03.2014: Rudolf, here, i added the resolution at the end. */
     if (collision_params.mode & COLLISION_MODE_BIND_THREE_PARTICLES) {
-      sprintf(s, " bind_three_particles %f %d %d",
+      sprintf(s, " bind_three_particles %f %d %d %d",
 	      collision_params.distance, collision_params.bond_centers,
-	      collision_params.bond_three_particles);
+	      collision_params.bond_three_particles, collision_params.three_particle_angle_resolution);
       Tcl_AppendResult(interp, s + 1, (char*) NULL);
     }
 
@@ -77,7 +78,7 @@ int tclcommand_on_collision(ClientData data, Tcl_Interp *interp, int argc, char 
 
   // Otherwise, we set parameters
   if (ARG0_IS_S("off")) {
-    collision_detection_set_params(0,0,0,0,0,0);
+    collision_detection_set_params(0,0,0,0,0,0,0);
     return TCL_OK;
   }
   else {
@@ -88,6 +89,7 @@ int tclcommand_on_collision(ClientData data, Tcl_Interp *interp, int argc, char 
     int bond_vs = 0;
     int t = 0;
     int bond_three_particles=0;
+    int angle_resolution=0;
 
     if (ARG0_IS_S("exception")) {
       mode = COLLISION_MODE_EXCEPTION;
@@ -140,7 +142,7 @@ int tclcommand_on_collision(ClientData data, Tcl_Interp *interp, int argc, char 
 /// three particle binding
     else if (ARG0_IS_S("bind_three_particles")) {
       mode |= COLLISION_MODE_BIND_THREE_PARTICLES;
-      if (argc != 4) {
+      if (argc != 5) {
 	Tcl_AppendResult(interp, "Not enough parameters, need a distance and two bond types.", (char*) NULL);
 	return TCL_ERROR;
       }
@@ -156,14 +158,18 @@ int tclcommand_on_collision(ClientData data, Tcl_Interp *interp, int argc, char 
 	Tcl_AppendResult(interp, "Need a bond type as 3rd arg.", (char*) NULL);
 	return TCL_ERROR;
       }
-      argc -= 4; argv += 4;
+      if (!ARG_IS_I(4,angle_resolution)) {
+	Tcl_AppendResult(interp, "Need an angle resolution as 4th arg.", (char*) NULL);
+	return TCL_ERROR;
+      }
+      argc -= 5; argv += 5;
     }
     else {
       Tcl_AppendResult(interp, "\"", argv[0], "\" is not a valid collision detection mode.", (char*) NULL);
       return TCL_ERROR;
     }
     
-    int res = collision_detection_set_params(mode,d,bond_centers,bond_vs,t,bond_three_particles);
+    int res = collision_detection_set_params(mode,d,bond_centers,bond_vs,t,bond_three_particles,angle_resolution);
 
     switch (res) {
     case 1:
