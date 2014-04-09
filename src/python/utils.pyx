@@ -18,19 +18,17 @@ cdef IntList* create_IntList_from_python_object(obj):
 
 cdef checkTypeOrExcept(x,n,t,msg):
   """Checks that x is of type t and that n values are given, otherwise throws ValueError with the message msg.
-     If x is an array/list/tuple, all elements are checked.
-     """
-  # Check whether x is an array/list/tuple or a single value
-  if n>1:
-    if hasattr(x, "__getitem__"): 
-      for i in range(len(x)):
-        if not isinstance(x[i], t):
-           raise ValueError(msg)
+     If x is an array/list/tuple, the type checking is done on the elements, and
+     all elements are checked.
+     Integers are accepted when a float was asked for.
+          if not (t==float and isinstance(x[i],int)):
+             raise ValueError(msg + " -- Item "+str(i)+" was of type "+type(x[i]).__name__)
     else:
       # if n>1, but the user passed a single value, also throw exception
-      raise ValueError(msg)
+      raise ValueError(msg+" -- A single value was given but "+str(n)+" were expected.")
   else:
     # N=1 and a single value
     if not isinstance(x, t):
-       raise ValueError(msg)
+      if not (t==float and isinstance(x,int)):
+        raise ValueError(msg+" -- Got an "+type(x).__name__)
 
