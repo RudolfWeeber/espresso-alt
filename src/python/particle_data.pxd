@@ -20,6 +20,10 @@ cdef extern from "particle_data.hpp":
     int    mol_id
     int    type
     
+  cppclass ParticleProperties:
+    double quatsch
+    pass
+
   ctypedef struct ParticlePosition:
     double p[3]
 
