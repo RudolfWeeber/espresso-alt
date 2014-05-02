@@ -82,11 +82,22 @@ int collision_detection_set_params(int mode, double d, int bond_centers, int bon
   three_particle_angle_resolution changes from 0 to 180. I do not understand how to do this */
 
   
+
   for (int i=collision_params.bond_three_particles;1<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution;i++)
   {
   // in the check code below, I need to use "i" right?
   if ((mode & COLLISION_MODE_BIND_THREE_PARTICLES) && !(bonded_ia_params[bond_centers].num == 1 &&
 				      		        bonded_ia_params[bond_three_particles].num + collision_params.three_particle_angle_resolution == i))
+
+  /*for (int i=collision_params.bond_three_particles;1<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution;i++)
+  {
+  // in the check code below, I need to use "i" right?
+  if ((mode & COLLISION_MODE_BIND_THREE_PARTICLES) && !(bonded_ia_params[bond_centers].num == 1 &&
+				      		        bonded_ia_params[bond_three_particles].num + collision_params.three_particle_angle_resolution == i))*/
+
+  if ((mode & COLLISION_MODE_BIND_THREE_PARTICLES) && !(bonded_ia_params[bond_centers].num == 1 &&
+				      		        bonded_ia_params[bond_three_particles].num == 2))  
+
     return 6;
   }
   // Set params
