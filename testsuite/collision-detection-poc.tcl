@@ -89,8 +89,9 @@ setmd min_global_cut 1.0
 on_collision bind_at_point_of_collision 1.0 2 3 1
 
 set res [on_collision]
+puts "$res"
 if { ! ( ([lindex $res 0] == "bind_at_point_of_collision") && (abs([lindex $res 1]-1) <1E-5) && ([lindex $res 2] == 2) && ([lindex $res 3] == 3) && ([lindex $res 4] == 1)) } {
-    error_exit "Setting collision_detection parameters for bind_centers does not work"
+    error_exit "Setting collision_detection parameters for bind_at_point_of_collision does not work"
 }
 
 # Check the actual collision detection

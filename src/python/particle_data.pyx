@@ -49,13 +49,8 @@ cdef class ParticleHandle:
                        self.particleData.r.p[2]])
 
 
-<<<<<<< HEAD
-
-=======
 # Velocity
 
-=======
->>>>>>> 845d6b43775ee07f18903eb81cc7587ef7502ea8
   property v:
     """Particle velocity""" 
     def __set__(self, _v):

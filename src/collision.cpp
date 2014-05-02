@@ -341,10 +341,18 @@ void handle_collisions ()
 /*RUDOLF: here, i assumed that the variable "size" should give 2, for angular potential bonnd. 
 I could not find this anywhere. but, i guess, when we talked about the implementation of the 
 single bond, axel or you told me sth like this. but i am not sure.*/
+// GIZEM: You need "==" in comparissons. "=" is an assignment. Size is right, I think
                          if (size=2) {
+// GIZEM: Replace the for loop in the next line by sth like
+// if ((p1->bl.e[b] >= collision_params.bond_three_particles) & (p1->bl.e[b] <=collision_params.bond_trhee_particles + collision_params.three_particle_anlge_resolutiuon))
                            for (int count=collision_params.bond_three_particles; count<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1; count++) {
                             if (p1->bl.e[b] == count && ((p1->bl.e[b + 1] == idp && p1->bl.e[b + 2] == idp2) || (p1->bl.e[b + 1] == idp2 && p1->bl.e[b + 2] == idp) )) {
                                // There's a bond, already. Nothing to do for these particles
+// GIZEM: "teutrn" means: leave the funciont. You probably want "break", which means exit from the loop.
+// Also, you need to set some variable like foundbond=0 above the loop and here set it to one,
+// when a bond is found
+// However: you don't only need to check the type of the bond, but also the bond partners.
+// Note, that they can appear in any order.
                                return;
                             }
                            }
@@ -354,6 +362,8 @@ single bond, axel or you told me sth like this. but i am not sure.*/
                     }
                     // If we are still here, we need to create angular bond
                     // First, find the angle between the particle p, p1 and p2
+// GIZEM: Here, check the value of the boundbond variable mentioned above, and only create the bond,
+// when it is 1
                     cosine=0.0;
                     /* vector from p_mid to p_left */
                     get_mi_vector(vec1, p->r.p, p1->r.p);
@@ -372,12 +382,15 @@ single bond, axel or you told me sth like this. but i am not sure.*/
                     /* bond angle */
                     phi =  acos(-cosine);
                     double bond_angle, bond_id;
+// GIZEM: Write in a comment, what this 57.something number is
                     bond_angle=phi*57.2957795;
 
+// GIZEM: Again, == for comparisson in the if statement!
+// GIZEM: Also: The two if statements won't do anything, because you immediately overwrite// the bond_id one line below. What did you want to achieve with them, aniway?
                     if (phi=0) bond_id=collision_params.bond_three_particles;
                     if (phi=PI) bond_id=collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1;
                     bond_id=floor(bond_angle);
-                    
+
                     bondT[0] = bond_id;
 	            bondT[1] = p->p.identity;
 	            bondT[2] = collision_queue[ij].pp2;

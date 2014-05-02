@@ -9,6 +9,14 @@ cdef extern from "particle_data.hpp":
   ctypedef struct IntList:
     pass
   ctypedef struct ParticleProperties:
+    int    identity
+    int    mol_id
+    int    type
+    
+  cppclass ParticleProperties:
+    double quatsch
+    pass
+
     int type
     double q
     pass
