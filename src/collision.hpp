@@ -61,6 +61,8 @@ typedef struct {
   double distance;
   /// bond type used for the three-particle bond (angle potential)
   int bond_three_particles;
+  /// different angle bonds with different equilibrium angles
+  int three_particle_angle_resolution;
 } Collision_parameters;
 
 /// Parameters for collision detection
@@ -85,8 +87,9 @@ void handle_collisions();
     if using noslip bonds
     @param t is the type of the virtual sites, if using noslip bonds
     @param bond_three_particles is the three-particle-bond parameter
+    @param angle_resolution is the three_particle_angle_resolution parameter in order to define different angle bonds
  */
-int collision_detection_set_params(int mode, double d, int bond_centers, int bond_vs,int t, int bond_three_particles);
+int collision_detection_set_params(int mode, double d, int bond_centers, int bond_vs,int t, int bond_three_particles, int angle_resolution);
 
 #endif
 

@@ -21,6 +21,7 @@
 #include "cells.hpp"
 #include "communication.hpp"
 #include "errorhandling.hpp"
+#include "grid.hpp"
 
 #ifdef COLLISION_DETECTION
 
@@ -37,11 +38,13 @@ typedef struct {
 static collision_struct *collision_queue;
 // Number of collisions recoreded in the queue
 static int number_of_collisions;
+// distance between two particles
+static double dist_betw_part, vec21[3]; 
 
 /// Parameters for collision detection
 Collision_parameters collision_params = { 0, };
 
-int collision_detection_set_params(int mode, double d, int bond_centers, int bond_vs,int t, int bond_three_particles)
+int collision_detection_set_params(int mode, double d, int bond_centers, int bond_vs,int t, int bond_three_particles, int angle_resolution)
 
 {
   if (mode & COLLISION_MODE_VS)
@@ -75,10 +78,28 @@ int collision_detection_set_params(int mode, double d, int bond_centers, int bon
 				      bonded_ia_params[bond_vs].num == 2))
     return 5;
 
-  if ((mode & COLLISION_MODE_BIND_THREE_PARTICLES) && !(bonded_ia_params[bond_centers].num == 1 &&
-				      		        bonded_ia_params[bond_three_particles].num == 2))
-    return 6;
+  /* Gizem: Check all the bonds and angles. BUT, bond_three_particles is 2, and 
+  three_particle_angle_resolution changes from 0 to 180. I do not understand how to do this */
 
+  
+
+  for (int i=collision_params.bond_three_particles;1<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution;i++)
+  {
+  // in the check code below, I need to use "i" right?
+  if ((mode & COLLISION_MODE_BIND_THREE_PARTICLES) && !(bonded_ia_params[bond_centers].num == 1 &&
+				      		        bonded_ia_params[bond_three_particles].num + collision_params.three_particle_angle_resolution == i))
+
+  /*for (int i=collision_params.bond_three_particles;1<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution;i++)
+  {
+  // in the check code below, I need to use "i" right?
+  if ((mode & COLLISION_MODE_BIND_THREE_PARTICLES) && !(bonded_ia_params[bond_centers].num == 1 &&
+				      		        bonded_ia_params[bond_three_particles].num + collision_params.three_particle_angle_resolution == i))*/
+
+  if ((mode & COLLISION_MODE_BIND_THREE_PARTICLES) && !(bonded_ia_params[bond_centers].num == 1 &&
+				      		        bonded_ia_params[bond_three_particles].num == 2))  
+
+    return 6;
+  }
   // Set params
   collision_params.mode=mode;
   collision_params.bond_centers=bond_centers;
@@ -86,6 +107,7 @@ int collision_detection_set_params(int mode, double d, int bond_centers, int bon
   collision_params.distance=d;
   collision_params.vs_particle_type=t;
   collision_params.bond_three_particles=bond_three_particles;
+  collision_params.three_particle_angle_resolution=angle_resolution;
 
   make_particle_type_exist(t);
 
@@ -100,7 +122,7 @@ void detect_collision(Particle* p1, Particle* p2)
 {
   // The check, whether collision detection is actually turned on is performed in forces.hpp
 
-  double dist_betw_part, vec21[3]; 
+  //double dist_betw_part, vec21[3]; 
   int part1, part2, size;
 
   // Obtain distance between particles
@@ -219,6 +241,9 @@ void handle_collisions ()
 {
    //printf("number of collisions in handle collision are %d\n",number_of_collisions);
 
+  double cosine, vec1[3], vec2[3],  d1i, d2i, dist2;
+  int j;
+
   for (int i = 0; i < number_of_collisions; i++) {
       printf("Handling collision of particles %d %d\n", collision_queue[i].pp1, collision_queue[i].pp2);
     //  fflush(stdout);
@@ -284,8 +309,142 @@ void handle_collisions ()
 
   }
 
+  // three-particle-binding part
+
+  if (collision_params.mode & (COLLISION_MODE_BIND_THREE_PARTICLES)) {  
+     Cell *cell;
+     Particle *p, *p1, *p2;
+     int size, idp, idp1, idp2, bondT[3]; 
+     double phi;
+     // first iterate over cells, get one of the cells and find how many particles in this cell
+     for (int c=0; c<local_cells.n; c++) {
+         cell=local_cells.cell[c];
+         // iterate over particles in the cell
+         for (int a=0; a<cell->n; a++) {
+             p=&cell->part[a];
+             idp=p->p.identity;
+             // for all p:
+             for (int ij=0; ij<number_of_collisions; ij++) {
+                 p1=local_particles[collision_queue[ij].pp1];
+                 p2=local_particles[collision_queue[ij].pp2];
+                 idp1=p1->p.identity;
+                 idp2=p2->p.identity;
+                 // Obtain distance between particles
+                 dist_betw_part = sqrt(distance2vec(p->r.p, p1->r.p, vec21));
+                 if (dist_betw_part < collision_params.distance) {
+                    // Check three-particle-bond on p1
+                    if (p1->bl.e) {
+                       int b = 0;
+                       while (b < p1->bl.n) {
+                         size = bonded_ia_params[p1->bl.e[b]].num;
+                         // Check three-particle-binding
+/*RUDOLF: here, i assumed that the variable "size" should give 2, for angular potential bonnd. 
+I could not find this anywhere. but, i guess, when we talked about the implementation of the 
+single bond, axel or you told me sth like this. but i am not sure.*/
+                         if (size=2) {
+                           for (int count=collision_params.bond_three_particles; count<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1; count++) {
+                            if (p1->bl.e[b] == count && ((p1->bl.e[b + 1] == idp && p1->bl.e[b + 2] == idp2) || (p1->bl.e[b + 1] == idp2 && p1->bl.e[b + 2] == idp) )) {
+                               // There's a bond, already. Nothing to do for these particles
+                               return;
+                            }
+                           }
+                         }
+                         b += size + 1;
+                       }
+                    }
+                    // If we are still here, we need to create angular bond
+                    // First, find the angle between the particle p, p1 and p2
+                    cosine=0.0;
+                    /* vector from p_mid to p_left */
+                    get_mi_vector(vec1, p->r.p, p1->r.p);
+                    dist2 = sqrlen(vec1);
+                    d1i = 1.0 / sqrt(dist2);
+                    for(j=0;j<3;j++) vec1[j] *= d1i;
+                    /* vector from p_right to p_mid */
+                    get_mi_vector(vec2, p1->r.p, p2->r.p);
+                    dist2 = sqrlen(vec2);
+                    d2i = 1.0 / sqrt(dist2);
+                    for(j=0;j<3;j++) vec2[j] *= d2i;
+                    /* scalar produvt of vec1 and vec2 */
+                    cosine = scalar(vec1, vec2);
+                    if ( cosine >  TINY_COS_VALUE)  cosine = TINY_COS_VALUE;
+                    if ( cosine < -TINY_COS_VALUE)  cosine = -TINY_COS_VALUE;
+                    /* bond angle */
+                    phi =  acos(-cosine);
+                    double bond_angle, bond_id;
+                    bond_angle=phi*57.2957795;
+
+                    if (phi=0) bond_id=collision_params.bond_three_particles;
+                    if (phi=PI) bond_id=collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1;
+                    bond_id=floor(bond_angle);
+                    
+                    bondT[0] = bond_id;
+	            bondT[1] = p->p.identity;
+	            bondT[2] = collision_queue[ij].pp2;
+	            local_change_bond(collision_queue[ij].pp1,   bondT, 0);
+                   
+                 }
+                 // same between particle p and p2      
+                 dist_betw_part = sqrt(distance2vec(p->r.p, p2->r.p, vec21));
+                 if (dist_betw_part < collision_params.distance) {
+                    // Check three-particle-bond on p1
+                    if (p2->bl.e) {
+                       int b = 0;
+                       while (b < p2->bl.n) {
+                         size = bonded_ia_params[p2->bl.e[b]].num;
+                         // Check three-particle-binding
+                         if (size=2) {
+                           for (int count=collision_params.bond_three_particles; count<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1; count++) {
+                            if (p2->bl.e[b] == count && ((p2->bl.e[b + 1] == idp && p2->bl.e[b + 2] == idp1) || (p2->bl.e[b + 1] == idp1 && p2->bl.e[b + 2] == idp) )) {
+                               // There's a bond, already. Nothing to do for these particles
+                               return;
+                            }
+                           }
+                         }
+                         b += size + 1;
+                       }
+                    }
+                    // If we are still here, we need to create angular bond
+                    // First, find the angle between the particle p, p1 and p2
+                    cosine=0.0;
+                    /* vector from p_mid to p_left */
+                    get_mi_vector(vec1, p->r.p, p2->r.p);
+                    dist2 = sqrlen(vec1);
+                    d1i = 1.0 / sqrt(dist2);
+                    for(j=0;j<3;j++) vec1[j] *= d1i;
+                    /* vector from p_right to p_mid */
+                    get_mi_vector(vec2, p2->r.p, p1->r.p);
+                    dist2 = sqrlen(vec2);
+                    d2i = 1.0 / sqrt(dist2);
+                    for(j=0;j<3;j++) vec2[j] *= d2i;
+                    /* scalar produvt of vec1 and vec2 */
+                    cosine = scalar(vec1, vec2);
+                    if ( cosine >  TINY_COS_VALUE)  cosine = TINY_COS_VALUE;
+                    if ( cosine < -TINY_COS_VALUE)  cosine = -TINY_COS_VALUE;
+                    /* bond angle */
+                    phi =  acos(-cosine);
+                    double bond_angle, bond_id;
+                    bond_angle=phi*57.2957795;
+
+                    if (phi=0) bond_id=collision_params.bond_three_particles;
+                    if (phi=PI) bond_id=collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1;
+                    bond_id=floor(bond_angle);
+                    
+                    bondT[0] = bond_id;
+	            bondT[1] = p->p.identity;
+	            bondT[2] = collision_queue[ij].pp1;
+	            local_change_bond(collision_queue[ij].pp2,   bondT, 0);
+                   
+                 }
+             }
+         }
+     }
+
+  }
+
   // Reset the collision queue
   number_of_collisions = 0;
+
   free(collision_queue);
 
   announce_resort_particles();
