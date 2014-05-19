@@ -83,7 +83,7 @@ int collision_detection_set_params(int mode, double d, int bond_centers, int bon
 
   
 
-  for (int i=collision_params.bond_three_particles;1<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution;i++)
+  for (int i=collision_params.bond_three_particles;i<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution;i++)
   {
   // in the check code below, I need to use "i" right?
   if ((mode & COLLISION_MODE_BIND_THREE_PARTICLES) && !(bonded_ia_params[bond_centers].num == 1 &&
@@ -338,11 +338,9 @@ void handle_collisions ()
                        while (b < p1->bl.n) {
                          size = bonded_ia_params[p1->bl.e[b]].num;
                          // Check three-particle-binding
-/*RUDOLF: here, i assumed that the variable "size" should give 2, for angular potential bonnd. 
-I could not find this anywhere. but, i guess, when we talked about the implementation of the 
-single bond, axel or you told me sth like this. but i am not sure.*/
-// GIZEM: You need "==" in comparissons. "=" is an assignment. Size is right, I think
-                         if (size=2) {
+
+// GIZEM: You need "==" in comparissons. "=" is an assignment. Size is right, I think (done)
+                         if (size==2) {
 // GIZEM: Replace the for loop in the next line by sth like
 // if ((p1->bl.e[b] >= collision_params.bond_three_particles) & (p1->bl.e[b] <=collision_params.bond_trhee_particles + collision_params.three_particle_anlge_resolutiuon))
                            for (int count=collision_params.bond_three_particles; count<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1; count++) {
@@ -353,7 +351,10 @@ single bond, axel or you told me sth like this. but i am not sure.*/
 // when a bond is found
 // However: you don't only need to check the type of the bond, but also the bond partners.
 // Note, that they can appear in any order.
-                               return;
+
+// Rudolf: (p1->bl.e[b] == count && ((p1->bl.e[b + 1] == idp && p1->bl.e[b + 2] == idp2) || (p1->bl.e[b + 1] == idp2 && p1->bl.e[b + 2] == idp) )) this is my control criteria, first i check the
+// bond type, then the bonding partners.
+                               break;
                             }
                            }
                          }
@@ -382,14 +383,15 @@ single bond, axel or you told me sth like this. but i am not sure.*/
                     /* bond angle */
                     phi =  acos(-cosine);
                     double bond_angle, bond_id;
-// GIZEM: Write in a comment, what this 57.something number is
-                    bond_angle=phi*57.2957795;
 
 // GIZEM: Again, == for comparisson in the if statement!
 // GIZEM: Also: The two if statements won't do anything, because you immediately overwrite// the bond_id one line below. What did you want to achieve with them, aniway?
-                    if (phi=0) bond_id=collision_params.bond_three_particles;
-                    if (phi=PI) bond_id=collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1;
-                    bond_id=floor(bond_angle);
+                    if (phi==0) {bond_id=collision_params.bond_three_particles;
+                    } if (phi==PI) {bond_id=collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1;
+                    } else {
+                         bond_angle=phi*57.2957795; // radian to degree conversion
+                         bond_id=floor(bond_angle);
+                    }
 
                     bondT[0] = bond_id;
 	            bondT[1] = p->p.identity;
@@ -439,9 +441,12 @@ single bond, axel or you told me sth like this. but i am not sure.*/
                     double bond_angle, bond_id;
                     bond_angle=phi*57.2957795;
 
-                    if (phi=0) bond_id=collision_params.bond_three_particles;
-                    if (phi=PI) bond_id=collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1;
-                    bond_id=floor(bond_angle);
+                    if (phi==0) {bond_id=collision_params.bond_three_particles;
+                    } if (phi==PI) {bond_id=collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1;
+                    } else {
+                         bond_angle=phi*57.2957795; // radian to degree conversion
+                         bond_id=floor(bond_angle);
+                    }
                     
                     bondT[0] = bond_id;
 	            bondT[1] = p->p.identity;
