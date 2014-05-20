@@ -59,9 +59,11 @@ typedef struct {
   int mode;
   /// distance at which particles are bound
   double distance;
-  /// bond type used for the three-particle bond (angle potential)
+  /// first bond type (for zero degrees)) used for the three-particle bond (angle potential)
   int bond_three_particles;
+  /// Number of angle bonds to use (angular resolution)
   /// different angle bonds with different equilibrium angles
+  /// Are expected to have ids immediatly following to bond_three_particles
   int three_particle_angle_resolution;
 } Collision_parameters;
 

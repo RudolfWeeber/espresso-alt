@@ -236,6 +236,96 @@ void prepare_collision_queue()
 
 }
 
+
+void coldet_do_three_particle_bond(Particle* p, Particle* p1, Particle* p2)
+// See comments in handle_collsion_queue()
+{
+ // If p1 and p2 are not closer or equal to the cutoff distance, skip
+ // p1:
+ if (sqrt(distance2vec(p->r.p, p1->r.p, vec21)) > collision_params.distance)
+  return;
+ // p2:
+ if (sqrt(distance2vec(p->r.p, p2->r.p, vec21)) > collision_params.distance)
+  return;
+
+  // Check, if there already is a three-particle bond centered on p 
+  // with p1 and p2 as partners. If so, skip this triplet.
+  // Note that the bond partners can appear in any order.
+  if (!p->bl.e)
+   return;
+ 
+ // Iterate over existing bonds of p
+ int b = 0;
+ while (b < p->bl.n) {
+   int size = bonded_ia_params[p->bl.e[b]].num;
+
+   // Is this a three particle bond? (2 bond partners)
+   if (size==2) {
+     // Check if the bond type is within the range used by the collision detection,
+     if ((p->bl.e[b] >= collision_params.bond_three_particles) & (p->bl.e[b] <=collision_params.bond_three_particles + collision_params.three_particle_angle_resolution)) {
+       // check, if p1 and p2 are the bond partners, (in any order)
+       // if yes, skip triplet
+       if (
+        ((p->bl.e[b+1]==p1->p.identity) & (p->bl.e[b+2] ==p2->p.identity))
+	|
+        ((p->bl.e[b+1]==p2->p.identity) & (p->bl.e[b+2] ==p1->p.identity))
+	)
+	  return;
+     } // if bond type 
+   } // if size==2
+   
+   // Go to next bond
+   b += size + 1;
+ } // bond loop
+ 
+ // If we are still here, we need to create angular bond
+ // First, find the angle between the particle p, p1 and p2
+ double cosine=0.0;
+
+ double vec1[3],vec2[3];
+ /* vector from p to p1 */
+ get_mi_vector(vec1, p->r.p, p1->r.p);
+ // Normalize
+ double dist2 = sqrlen(vec1);
+ double d1i = 1.0 / sqrt(dist2);
+ for(int j=0;j<3;j++) vec1[j] *= d1i;
+ 
+ /* vector from p to p2 */
+ get_mi_vector(vec2, p->r.p, p2->r.p);
+ // normalize
+ dist2 = sqrlen(vec2);
+ double d2i = 1.0 / sqrt(dist2);
+ for(int j=0;j<3;j++) vec2[j] *= d2i;
+
+ /* scalar produvt of vec1 and vec2 */
+ cosine = scalar(vec1, vec2);
+ 
+ // Handle case where cosine is nearly 1 or nearly -1
+ if ( cosine >  TINY_COS_VALUE)  
+   cosine = TINY_COS_VALUE;
+ if ( cosine < -TINY_COS_VALUE)  
+    cosine = -TINY_COS_VALUE;
+ 
+ // Bond angle
+ double phi =  acos(-cosine);
+ 
+ // We find the bond id by dividing the range from 0 to pi in 
+ // three_particle_angle_resolution steps and by adding the id
+ // of the bond for zero degrees.
+ int bond_id =floor(phi/M_PI * collision_params.three_particle_angle_resolution); +collision_params.bond_three_particles;
+
+ // Create the bond
+ 
+ // First, fill bond data structure
+ int bondT[3];
+ bondT[0] = bond_id;
+ bondT[1] = p1->p.identity;
+ bondT[2] = p2->p.identity;
+ local_change_bond(p->p.identity, bondT, 0);
+   
+}
+
+
 // Handle the collisions stored in the queue
 void handle_collisions ()
 {
@@ -329,131 +419,26 @@ void handle_collisions ()
                  p2=local_particles[collision_queue[ij].pp2];
                  idp1=p1->p.identity;
                  idp2=p2->p.identity;
-                 // Obtain distance between particles
-                 dist_betw_part = sqrt(distance2vec(p->r.p, p1->r.p, vec21));
-                 if (dist_betw_part < collision_params.distance) {
-                    // Check three-particle-bond on p1
-                    if (p1->bl.e) {
-                       int b = 0;
-                       while (b < p1->bl.n) {
-                         size = bonded_ia_params[p1->bl.e[b]].num;
-                         // Check three-particle-binding
 
-// GIZEM: You need "==" in comparissons. "=" is an assignment. Size is right, I think (done)
-                         if (size==2) {
-// GIZEM: Replace the for loop in the next line by sth like
-// if ((p1->bl.e[b] >= collision_params.bond_three_particles) & (p1->bl.e[b] <=collision_params.bond_trhee_particles + collision_params.three_particle_anlge_resolutiuon))
-                           for (int count=collision_params.bond_three_particles; count<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1; count++) {
-                            if (p1->bl.e[b] == count && ((p1->bl.e[b + 1] == idp && p1->bl.e[b + 2] == idp2) || (p1->bl.e[b + 1] == idp2 && p1->bl.e[b + 2] == idp) )) {
-                               // There's a bond, already. Nothing to do for these particles
-// GIZEM: "teutrn" means: leave the funciont. You probably want "break", which means exit from the loop.
-// Also, you need to set some variable like foundbond=0 above the loop and here set it to one,
-// when a bond is found
-// However: you don't only need to check the type of the bond, but also the bond partners.
-// Note, that they can appear in any order.
+		 // Check, whether p is equal to one of the particles in the
+		 // collision. If so, skip
+		 if ((p->p.identity ==idp1) || ( p->p.identity == idp2)) {
+		   continue;
+		 }
 
-// Rudolf: (p1->bl.e[b] == count && ((p1->bl.e[b + 1] == idp && p1->bl.e[b + 2] == idp2) || (p1->bl.e[b + 1] == idp2 && p1->bl.e[b + 2] == idp) )) this is my control criteria, first i check the
-// bond type, then the bonding partners.
-                               break;
-                            }
-                           }
-                         }
-                         b += size + 1;
-                       }
-                    }
-                    // If we are still here, we need to create angular bond
-                    // First, find the angle between the particle p, p1 and p2
-// GIZEM: Here, check the value of the boundbond variable mentioned above, and only create the bond,
-// when it is 1
-                    cosine=0.0;
-                    /* vector from p_mid to p_left */
-                    get_mi_vector(vec1, p->r.p, p1->r.p);
-                    dist2 = sqrlen(vec1);
-                    d1i = 1.0 / sqrt(dist2);
-                    for(j=0;j<3;j++) vec1[j] *= d1i;
-                    /* vector from p_right to p_mid */
-                    get_mi_vector(vec2, p1->r.p, p2->r.p);
-                    dist2 = sqrlen(vec2);
-                    d2i = 1.0 / sqrt(dist2);
-                    for(j=0;j<3;j++) vec2[j] *= d2i;
-                    /* scalar produvt of vec1 and vec2 */
-                    cosine = scalar(vec1, vec2);
-                    if ( cosine >  TINY_COS_VALUE)  cosine = TINY_COS_VALUE;
-                    if ( cosine < -TINY_COS_VALUE)  cosine = -TINY_COS_VALUE;
-                    /* bond angle */
-                    phi =  acos(-cosine);
-                    double bond_angle, bond_id;
+                 // The following checks, 
+		 // if the particle p is closer that the cutoff from p1 and/or p2.
+		 // If yes, three particle bonds are created on all particles
+		 // which have two other particles within the cutoff distance,
+		 // unless such a bond already exists
+		 
+		 // We need all cyclical permutations, here 
+		 // (bond is placed on 1st particle, order of bond partners
+		 // does not matter, so we don't neet non-cyclic permutations):
+		 coldet_do_three_particle_bond(p,p1,p2);
+		 coldet_do_three_particle_bond(p2,p,p1);
+		 coldet_do_three_particle_bond(p1,p2,p);
 
-// GIZEM: Again, == for comparisson in the if statement!
-// GIZEM: Also: The two if statements won't do anything, because you immediately overwrite// the bond_id one line below. What did you want to achieve with them, aniway?
-                    if (phi==0) {bond_id=collision_params.bond_three_particles;
-                    } if (phi==PI) {bond_id=collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1;
-                    } else {
-                         bond_angle=phi*57.2957795; // radian to degree conversion
-                         bond_id=floor(bond_angle);
-                    }
-
-                    bondT[0] = bond_id;
-	            bondT[1] = p->p.identity;
-	            bondT[2] = collision_queue[ij].pp2;
-	            local_change_bond(collision_queue[ij].pp1,   bondT, 0);
-                   
-                 }
-                 // same between particle p and p2      
-                 dist_betw_part = sqrt(distance2vec(p->r.p, p2->r.p, vec21));
-                 if (dist_betw_part < collision_params.distance) {
-                    // Check three-particle-bond on p1
-                    if (p2->bl.e) {
-                       int b = 0;
-                       while (b < p2->bl.n) {
-                         size = bonded_ia_params[p2->bl.e[b]].num;
-                         // Check three-particle-binding
-                         if (size=2) {
-                           for (int count=collision_params.bond_three_particles; count<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1; count++) {
-                            if (p2->bl.e[b] == count && ((p2->bl.e[b + 1] == idp && p2->bl.e[b + 2] == idp1) || (p2->bl.e[b + 1] == idp1 && p2->bl.e[b + 2] == idp) )) {
-                               // There's a bond, already. Nothing to do for these particles
-                               return;
-                            }
-                           }
-                         }
-                         b += size + 1;
-                       }
-                    }
-                    // If we are still here, we need to create angular bond
-                    // First, find the angle between the particle p, p1 and p2
-                    cosine=0.0;
-                    /* vector from p_mid to p_left */
-                    get_mi_vector(vec1, p->r.p, p2->r.p);
-                    dist2 = sqrlen(vec1);
-                    d1i = 1.0 / sqrt(dist2);
-                    for(j=0;j<3;j++) vec1[j] *= d1i;
-                    /* vector from p_right to p_mid */
-                    get_mi_vector(vec2, p2->r.p, p1->r.p);
-                    dist2 = sqrlen(vec2);
-                    d2i = 1.0 / sqrt(dist2);
-                    for(j=0;j<3;j++) vec2[j] *= d2i;
-                    /* scalar produvt of vec1 and vec2 */
-                    cosine = scalar(vec1, vec2);
-                    if ( cosine >  TINY_COS_VALUE)  cosine = TINY_COS_VALUE;
-                    if ( cosine < -TINY_COS_VALUE)  cosine = -TINY_COS_VALUE;
-                    /* bond angle */
-                    phi =  acos(-cosine);
-                    double bond_angle, bond_id;
-                    bond_angle=phi*57.2957795;
-
-                    if (phi==0) {bond_id=collision_params.bond_three_particles;
-                    } if (phi==PI) {bond_id=collision_params.bond_three_particles+collision_params.three_particle_angle_resolution-1;
-                    } else {
-                         bond_angle=phi*57.2957795; // radian to degree conversion
-                         bond_id=floor(bond_angle);
-                    }
-                    
-                    bondT[0] = bond_id;
-	            bondT[1] = p->p.identity;
-	            bondT[2] = collision_queue[ij].pp1;
-	            local_change_bond(collision_queue[ij].pp2,   bondT, 0);
-                   
-                 }
              }
          }
      }
