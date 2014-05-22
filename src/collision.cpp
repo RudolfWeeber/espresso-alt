@@ -78,11 +78,6 @@ int collision_detection_set_params(int mode, double d, int bond_centers, int bon
 				      bonded_ia_params[bond_vs].num == 2))
     return 5;
 
-  /* Gizem: Check all the bonds and angles. BUT, bond_three_particles is 2, and 
-  three_particle_angle_resolution changes from 0 to 180. I do not understand how to do this */
-
-  
-
   for (int i=collision_params.bond_three_particles;i<collision_params.bond_three_particles+collision_params.three_particle_angle_resolution;i++)
   {
   // in the check code below, I need to use "i" right?
@@ -203,8 +198,8 @@ void detect_collision(Particle* p1, Particle* p2)
   }
 
 
-  if (collision_params.mode & (COLLISION_MODE_VS | COLLISION_MODE_EXCEPTION)) {
-    /* If we also create virtual sites or throw an exception, we add the collision
+  if (collision_params.mode & (COLLISION_MODE_VS | COLLISION_MODE_EXCEPTION | COLLISION_MODE_BIND_THREE_PARTICLES)) {
+    /* If we also create virtual sites or bind three particles, or throw an exception, we add the collision
        to the queue to process later */
 
     // Point of collision
@@ -251,33 +246,34 @@ void coldet_do_three_particle_bond(Particle* p, Particle* p1, Particle* p2)
   // Check, if there already is a three-particle bond centered on p 
   // with p1 and p2 as partners. If so, skip this triplet.
   // Note that the bond partners can appear in any order.
-  if (!p->bl.e)
-   return;
  
  // Iterate over existing bonds of p
  int b = 0;
- while (b < p->bl.n) {
-   int size = bonded_ia_params[p->bl.e[b]].num;
+ if (p->bl.e)
+ {
+   while (b < p->bl.n) {
+     int size = bonded_ia_params[p->bl.e[b]].num;
+  
+     // Is this a three particle bond? (2 bond partners)
+     if (size==2) {
+       // Check if the bond type is within the range used by the collision detection,
+       if ((p->bl.e[b] >= collision_params.bond_three_particles) & (p->bl.e[b] <=collision_params.bond_three_particles + collision_params.three_particle_angle_resolution)) {
+         // check, if p1 and p2 are the bond partners, (in any order)
+         // if yes, skip triplet
+         if (
+          ((p->bl.e[b+1]==p1->p.identity) & (p->bl.e[b+2] ==p2->p.identity))
+  	|
+          ((p->bl.e[b+1]==p2->p.identity) & (p->bl.e[b+2] ==p1->p.identity))
+  	)
+  	  return;
+       } // if bond type 
+     } // if size==2
+     
+     // Go to next bond
+     b += size + 1;
+   } // bond loop
+ } // if bond list defined
 
-   // Is this a three particle bond? (2 bond partners)
-   if (size==2) {
-     // Check if the bond type is within the range used by the collision detection,
-     if ((p->bl.e[b] >= collision_params.bond_three_particles) & (p->bl.e[b] <=collision_params.bond_three_particles + collision_params.three_particle_angle_resolution)) {
-       // check, if p1 and p2 are the bond partners, (in any order)
-       // if yes, skip triplet
-       if (
-        ((p->bl.e[b+1]==p1->p.identity) & (p->bl.e[b+2] ==p2->p.identity))
-	|
-        ((p->bl.e[b+1]==p2->p.identity) & (p->bl.e[b+2] ==p1->p.identity))
-	)
-	  return;
-     } // if bond type 
-   } // if size==2
-   
-   // Go to next bond
-   b += size + 1;
- } // bond loop
- 
  // If we are still here, we need to create angular bond
  // First, find the angle between the particle p, p1 and p2
  double cosine=0.0;
@@ -307,12 +303,12 @@ void coldet_do_three_particle_bond(Particle* p, Particle* p1, Particle* p2)
     cosine = -TINY_COS_VALUE;
  
  // Bond angle
- double phi =  acos(-cosine);
+ double phi =  acos(cosine);
  
  // We find the bond id by dividing the range from 0 to pi in 
  // three_particle_angle_resolution steps and by adding the id
  // of the bond for zero degrees.
- int bond_id =floor(phi/M_PI * collision_params.three_particle_angle_resolution); +collision_params.bond_three_particles;
+ int bond_id =floor(phi/M_PI * collision_params.three_particle_angle_resolution) +collision_params.bond_three_particles;
 
  // Create the bond
  

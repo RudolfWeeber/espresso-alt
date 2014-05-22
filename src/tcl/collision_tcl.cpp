@@ -141,7 +141,7 @@ int tclcommand_on_collision(ClientData data, Tcl_Interp *interp, int argc, char 
     }
 /// three particle binding
     else if (ARG0_IS_S("bind_three_particles")) {
-      mode |= COLLISION_MODE_BIND_THREE_PARTICLES;
+      mode |= COLLISION_MODE_BIND_THREE_PARTICLES | COLLISION_MODE_BOND;
       if (argc != 5) {
 	Tcl_AppendResult(interp, "Not enough parameters, need a distance and two bond types.", (char*) NULL);
 	return TCL_ERROR;
