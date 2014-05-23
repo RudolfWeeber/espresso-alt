@@ -237,10 +237,12 @@ void coldet_do_three_particle_bond(Particle* p, Particle* p1, Particle* p2)
 {
  // If p1 and p2 are not closer or equal to the cutoff distance, skip
  // p1:
- if (sqrt(distance2vec(p->r.p, p1->r.p, vec21)) > collision_params.distance)
+ get_mi_vector(vec21,p->r.p,p1->r.p);
+ if (sqrt(sqrlen(vec21)) > collision_params.distance)
   return;
  // p2:
- if (sqrt(distance2vec(p->r.p, p2->r.p, vec21)) > collision_params.distance)
+ get_mi_vector(vec21,p->r.p,p2->r.p);
+ if (sqrt(sqrlen(vec21)) > collision_params.distance)
   return;
 
   // Check, if there already is a three-particle bond centered on p 
@@ -308,7 +310,7 @@ void coldet_do_three_particle_bond(Particle* p, Particle* p1, Particle* p2)
  // We find the bond id by dividing the range from 0 to pi in 
  // three_particle_angle_resolution steps and by adding the id
  // of the bond for zero degrees.
- int bond_id =floor(phi/M_PI * collision_params.three_particle_angle_resolution) +collision_params.bond_three_particles;
+ int bond_id =floor(phi/M_PI * (collision_params.three_particle_angle_resolution-1) +0.5) +collision_params.bond_three_particles;
 
  // Create the bond
  
