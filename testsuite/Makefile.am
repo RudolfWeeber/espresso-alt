@@ -22,6 +22,7 @@ tests = \
 	angle.tcl \
 	collision-detection-centers.tcl \
 	collision-detection-poc.tcl \
+	collision-detection-tpb.tcl \
 	comforce.tcl \
 	comfixed.tcl \
 	command_syntax.tcl \

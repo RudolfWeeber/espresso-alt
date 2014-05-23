@@ -333,7 +333,6 @@ void handle_collisions ()
   int j;
 
   for (int i = 0; i < number_of_collisions; i++) {
-      printf("Handling collision of particles %d %d\n", collision_queue[i].pp1, collision_queue[i].pp2);
     //  fflush(stdout);
 
     if (collision_params.mode & (COLLISION_MODE_EXCEPTION)) {
