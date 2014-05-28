@@ -22,6 +22,8 @@
 #include "communication.hpp"
 #include "errorhandling.hpp"
 #include "grid.hpp"
+#include "cells.hpp"
+#include "domain_decomposition.hpp"
 
 #ifdef COLLISION_DETECTION
 
@@ -398,49 +400,113 @@ void handle_collisions ()
 
   // three-particle-binding part
 
-  if (collision_params.mode & (COLLISION_MODE_BIND_THREE_PARTICLES)) {  
-     Cell *cell;
-     Particle *p, *p1, *p2;
-     int size, idp, idp1, idp2, bondT[3]; 
-     double phi;
-     // first iterate over cells, get one of the cells and find how many particles in this cell
-     for (int c=0; c<local_cells.n; c++) {
-         cell=local_cells.cell[c];
-         // iterate over particles in the cell
-         for (int a=0; a<cell->n; a++) {
-             p=&cell->part[a];
-             idp=p->p.identity;
-             // for all p:
-             for (int ij=0; ij<number_of_collisions; ij++) {
-                 p1=local_particles[collision_queue[ij].pp1];
-                 p2=local_particles[collision_queue[ij].pp2];
-                 idp1=p1->p.identity;
-                 idp2=p2->p.identity;
+  if (number_of_collisions>0) {
+   
 
-		 // Check, whether p is equal to one of the particles in the
-		 // collision. If so, skip
-		 if ((p->p.identity ==idp1) || ( p->p.identity == idp2)) {
-		   continue;
-		 }
+   if (collision_params.mode & (COLLISION_MODE_BIND_THREE_PARTICLES)) {  
 
-                 // The following checks, 
-		 // if the particle p is closer that the cutoff from p1 and/or p2.
-		 // If yes, three particle bonds are created on all particles
-		 // which have two other particles within the cutoff distance,
-		 // unless such a bond already exists
-		 
-		 // We need all cyclical permutations, here 
-		 // (bond is placed on 1st particle, order of bond partners
-		 // does not matter, so we don't neet non-cyclic permutations):
-		 coldet_do_three_particle_bond(p,p1,p2);
-		 coldet_do_three_particle_bond(p2,p,p1);
-		 coldet_do_three_particle_bond(p1,p2,p);
+   // If we don't have domain decomposition, we need to do a full sweep over all
+   // particles in the system. (slow)
+   if (cell_structure.type!=CELL_STRUCTURE_DOMDEC)
+   {
+       Cell *cell;
+       Particle *p, *p1, *p2;
+       // first iterate over cells, get one of the cells and find how many particles in this cell
+       for (int c=0; c<local_cells.n; c++) {
+           cell=local_cells.cell[c];
+           // iterate over particles in the cell
+           for (int a=0; a<cell->n; a++) {
+               p=&cell->part[a];
+               // for all p:
+               for (int ij=0; ij<number_of_collisions; ij++) {
+                   p1=local_particles[collision_queue[ij].pp1];
+                   p2=local_particles[collision_queue[ij].pp2];
+  
+  		 // Check, whether p is equal to one of the particles in the
+  		 // collision. If so, skip
+  		 if ((p->p.identity ==p1->p.identity) || ( p->p.identity == p2->p.identity)) {
+  		   continue;
+  		 }
+  
+                   // The following checks, 
+  		 // if the particle p is closer that the cutoff from p1 and/or p2.
+  		 // If yes, three particle bonds are created on all particles
+  		 // which have two other particles within the cutoff distance,
+  		 // unless such a bond already exists
+  		 
+  		 // We need all cyclical permutations, here 
+  		 // (bond is placed on 1st particle, order of bond partners
+  		 // does not matter, so we don't neet non-cyclic permutations):
+  		 coldet_do_three_particle_bond(p,p1,p2);
+  		 coldet_do_three_particle_bond(p2,p,p1);
+  		 coldet_do_three_particle_bond(p1,p2,p);
+  
+               }
+           }
+       }
+  
+    } // if cell structure = domain decomposition
+    else
+    { // We have domain decomposition
+    
+    // Indices of the cells in which the colliding particles reside
+    int cellIdx[2][3];
+    
+    // Iterate over collision queue
+    for (int i=0;i<number_of_collisions;i++) {
+      // Get first cell Idx
+      Particle* p1=local_particles[collision_queue[i].pp1];
+      Particle* p2=local_particles[collision_queue[i].pp2];
+      dd_position_to_cell_indices(p1->r.p,cellIdx[0]);
+      dd_position_to_cell_indices(p2->r.p,cellIdx[1]);
 
-             }
-         }
-     }
+      // Iterate over the cells + their neighbors
+      // if pa and p2 are in the same cell, we don't need to consider it 2x
+      int lim=1;
 
-  }
+      if ((cellIdx[0][0]==cellIdx[1][0]) && (cellIdx[0][1]==cellIdx[1][1]) && (cellIdx[0][2]==cellIdx[1][2]))
+        lim=0; // Only consider the 1st cell
+
+      for (int j=0;j<=lim;j++)
+      {
+       // Iterate the cell with indices cellIdx[j][] and all its neighbors.
+       // code taken from dd_init_cell_interactions()
+       for(int p=cellIdx[j][0]-1; p<=cellIdx[j][0]+1; p++)	
+         for(int q=cellIdx[j][1]-1; q<=cellIdx[j][1]+1; q++)
+	   for(int r=cellIdx[j][2]-1; r<=cellIdx[j][2]+1; r++) {   
+	    int ind2 = get_linear_index(p,q,r,dd.ghost_cell_grid);
+	    Cell* cell=cells+ind2;
+
+	    // Iterate over particles in this cell
+            for (int a=0; a<cell->n; a++) {
+               Particle* P=&cell->part[a];
+               // for all p:
+  	       // Check, whether p is equal to one of the particles in the
+  	       // collision. If so, skip
+  	       if ((P->p.identity ==p1->p.identity) || ( P->p.identity == p2->p.identity)) {
+  		   continue;
+  	       }
+               // The following checks, 
+               // if the particle p is closer that the cutoff from p1 and/or p2.
+               // If yes, three particle bonds are created on all particles
+  	       // which have two other particles within the cutoff distance,
+               // unless such a bond already exists
+  		 
+  	       // We need all cyclical permutations, here 
+               // (bond is placed on 1st particle, order of bond partners
+  	       // does not matter, so we don't neet non-cyclic permutations):
+               coldet_do_three_particle_bond(P,p1,p2);
+               coldet_do_three_particle_bond(p2,P,p1);
+             } // loop over particles
+           } // Cell loop
+
+	 } // Loop over 1st and 2nd particle, in case they are in diferent cells
+
+        } // Loop over collision queue
+    
+      } // If domain decomposition
+    } // if three particle binding
+  } // if number of collisions >0 (three particle binding)
 
   // Reset the collision queue
   number_of_collisions = 0;
