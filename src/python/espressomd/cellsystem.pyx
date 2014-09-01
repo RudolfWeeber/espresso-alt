@@ -17,7 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>. 
 #  
 cimport cellsystem
-cimport global_variables
 
 cdef class Cellsystem:
     def __init__(self):
