@@ -261,8 +261,9 @@ cdef class BondedInteraction(object):
       # Check, if the bond in Espresso core is really defined as a FENE bond
       if bonded_ia_params[bondId].type != self.typeNumber():
         raise Exception("The bond with this id is not defined as a "+self.typeName()+" bond in the Espresso core.")
-      
+ 
       self._bondId=bondId
+
       # Load the parameters currently set in the Espresso core
       self._params=self._getParamsFromEsCore()
       self._bondId=bondId
@@ -375,6 +376,7 @@ class FeneBond(BondedInteraction):
   def _setParamsInEsCore(self):
    fene_set_params(self._bondId,self._params["k"],self._params["d_r_max"],self._params["r_0"])
 
+
 class HarmonicBond(BondedInteraction):
   def typeNumber(self):
     return 1
@@ -399,11 +401,63 @@ class HarmonicBond(BondedInteraction):
 
   def _setParamsInEsCore(self):
    harmonic_set_params(self._bondId,self._params["k"],self._params["r_0"],self._params["r_cut"])
+   
+
+class Dihedral(BondedInteraction):
+  def typeNumber(self):
+    return 4
+
+  def typeName(self): 
+    return "DIHEDRAL"
+
+  def validKeys(self):
+    return "mult","bend","phase"
+
+  def requiredKeys(self): 
+    return "mult","bend", "phase"
+
+  def setDefaultParams(self):
+    self._params = {"mult'":1.,"bend":0.,"phase":0.} 
+
+  def _getParamsFromEsCore(self):
+    return \
+      {"mult":bonded_ia_params[self._bondId].p.dihedral.mult,\
+       "bend":bonded_ia_params[self._bondId].p.dihedral.bend,\
+       "phase":bonded_ia_params[self._bondId].p.dihedral.phase}
+
+  def _setParamsInEsCore(self):
+   dihedral_set_params(self._bondId,self._params["mult"],self._params["bend"],self._params["phase"])
+   
+   
+class Tabulated(BondedInteraction):
+  def typeNumber(self):
+    return 5
+
+  def typeName(self): 
+    return "TABULATED"
+
+  def validKeys(self):
+    return "*filename"
+
+  def requiredKeys(self): 
+    return "*filename"
+
+  def setDefaultParams(self):
+    self._params = {"*filename":""} 
+
+  def _getParamsFromEsCore(self):
+    return \
+      {"mult":bonded_ia_params[self._bondId].p.dihedral.mult,\
+       "bend":bonded_ia_params[self._bondId].p.dihedral.bend,\
+       "phase":bonded_ia_params[self._bondId].p.dihedral.phase}
+
+  def _setParamsInEsCore(self):
+   dihedral_set_params(self._bondId,self._params["mult"],self._params["bend"],self._params["phase"])
 
     
 
 
-bondedInteractionClasses = {0:FeneBond, 1:HarmonicBond}
+bondedInteractionClasses = {0:FeneBond, 1:HarmonicBond, 4:Dihedral, 5:Tabulated}
 
 
 
@@ -426,6 +480,8 @@ class BondedInteractions:
       raise ValueError("The bonded interaction with the id "+str(key)+" is not yet defined.")
 
     # Find the appropriate class representing such a bond
+    print bondType
+    print "   "
     bondClass =bondedInteractionClasses[bondType]
 
     # And return an instance of it, which refers to the bonded interaction id in Espresso

@@ -241,3 +241,7 @@ cdef extern from "fene.hpp":
   int fene_set_params(int bond_type, double k, double drmax, double r0)
 cdef extern from "harmonic.hpp":
   int harmonic_set_params(int bond_type, double k, double r,double r_cut)
+cdef extern from "dihedral.hpp":
+  int dihedral_set_params(int bond_type, int mult, double bend, double phase)
+cdef extern from "tab.hpp":
+  tabulated_set_params(int part_type_a, int part_type_b, char* filename)
