@@ -18,15 +18,19 @@
 #  
 # Tests particle property setters/getters
 import unittest as ut
-import espresso.System as es
+import espressomd
+import espressomd._system as es
+from espressomd import code_info
 import numpy as np
-from espresso.interactions import FeneBond, HarmonicBond
+from espressomd.interactions import FeneBond, HarmonicBond
 
 
 
 class ParticleProperties(ut.TestCase):
 #  def __init__(self,particleId):
 #    self.pid=particleId
+  # the system which will be tested
+  system = espressomd.System()
   
   # Particle id to work on
   pid=17
@@ -54,7 +58,7 @@ class ParticleProperties(ut.TestCase):
 
 
   def setUp(self):
-    es.part[self.pid].pos =0,0,0
+      self.system.part[self.pid].pos =0,0,0
 
   def generateTestForBondParams(_bondId,_bondClass,_params):
     """Generates test cases for checking bond parameters set and gotten back
@@ -69,22 +73,22 @@ class ParticleProperties(ut.TestCase):
 
 
     def func(self):
-      # This code is run at the execution of the generated function.
-      # It will use the state of the variables in the outer function, 
-      # which was there, when the outer function was called
-      es.bondedInter[bondId]=bondClass(**params)
-      outBond=es.bondedInter[bondId]
-      tnIn=bondClass(**params).typeNumber()
-      tnOut=outBond.typeNumber()
-      outParams=outBond.params
-      self.assertTrue(self.bondsMatch(tnIn,tnOut,params,outParams), bondClass(**params).typeName()+": value set and value gotten back differ for bond id "+str(bondId)+": "+params.__str__()+" vs. "+outParams.__str__())
+        # This code is run at the execution of the generated function.
+        # It will use the state of the variables in the outer function, 
+        # which was there, when the outer function was called
+        self.system.bondedInter[bondId]=bondClass(**params)
+        outBond=self.system.bondedInter[bondId]
+        tnIn=bondClass(**params).typeNumber()
+        tnOut=outBond.typeNumber()
+        outParams=outBond.params
+        self.assertTrue(self.bondsMatch(tnIn,tnOut,params,outParams), bondClass(**params).typeName()+": value set and value gotten back differ for bond id "+str(bondId)+": "+params.__str__()+" vs. "+outParams.__str__())
 
     return func
   
 
   def test_aa_bondedInterSetterGetter(self):
-    es.bondedInter[0]=HarmonicBond(k=0,r_0=0)
-    bond=es.bondedInter[0]
+    self.system.bondedInter[0]=HarmonicBond(k=0,r_0=0)
+    bond=self.system.bondedInter[0]
     self.assertTrue(isinstance(bond,HarmonicBond),"The bond was created as harmonic bond but the instance gotten back is of different type.")
   
   test_harmonic=generateTestForBondParams(0,HarmonicBond,{"r_0":1.1, "k":5.2})
@@ -94,5 +98,5 @@ class ParticleProperties(ut.TestCase):
 
 
 if __name__ == "__main__":
- print("Features: ",es.code_info.features())
+ print("Features: ",code_info.features())
  ut.main()
