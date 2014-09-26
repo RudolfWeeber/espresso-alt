@@ -22,7 +22,8 @@ import espressomd
 import espressomd._system as es
 from espressomd import code_info
 import numpy as np
-from espressomd.interactions import FeneBond, HarmonicBond
+from espressomd.interactions import FeneBond, HarmonicBond, Dihedral, Angle_Harmonic, Angle_Cosine,\
+       Angle_Cossquare, Subt_Lj, Angledist
 
 
 
@@ -95,6 +96,12 @@ class ParticleProperties(ut.TestCase):
   test_harmonic2=generateTestForBondParams(0,HarmonicBond,{"r_0":1.1, "k":5.2,"r_cut":1.3})
   test_fene=generateTestForBondParams(0,FeneBond,{"r_0":1.1, "k":5.2,"d_r_max":3.})
   test_fene2=generateTestForBondParams(1,FeneBond,{"r_0":1.1, "k":5.2,"d_r_max":3.})
+  test_dihedral=generateTestForBondParams(0,Dihedral,{"mult":3.0, "bend":5.2,"phase":3.})
+  test_angle_harm=generateTestForBondParams(0,Angle_Harmonic,{"bend":5.2, "phi0":3.2})
+  test_angle_cos=generateTestForBondParams(0,Angle_Cosine,{"bend":5.2, "phi0":3.2})
+  test_angle_cossquare=generateTestForBondParams(0,Angle_Cossquare,{"bend":5.2, "phi0":3.2})
+  test_subt_lj=generateTestForBondParams(0,Subt_Lj,{"k":5.2, "r":3.2})
+  test_angledist=generateTestForBondParams(0,Angledist,{"bend":5,"phimin":3,"distmin":0,"phimax":4,"distmax":2})
 
 
 if __name__ == "__main__":
