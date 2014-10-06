@@ -64,8 +64,9 @@ int mindist3(int part_id, double r_catch, int *ids) {
 	      --> prevent that! */
   for(i=0; i<n_part; i++) if (partCfgMD[i].p.identity == part_id) me = i; 
   if (me == -1) {
-    char *errtxt = runtime_error(128 + ES_INTEGER_SPACE);
-    ERROR_SPRINTF(errtxt, "{049 failed to find desired particle %d} ",part_id);
+      ostringstream msg;
+      msg <<"failed to find desired particle " << part_id;
+      runtimeError(msg);
     return 0;
   }
   for (i=0; i<n_part; i++) {
@@ -134,12 +135,23 @@ int constraint_collision(double *p1, double *p2){
   double folded_pos1[3];
   double folded_pos2[3];
   int img[3];
-
+#ifdef LEES_EDWARDS
+  double vtmp[3];
+#endif
+  
   memcpy(folded_pos1, p1, 3*sizeof(double));
+#ifdef LEES_EDWARDS
+  fold_position(folded_pos1, vtmp, img);
+#else
   fold_position(folded_pos1, img);
+#endif
 
   memcpy(folded_pos2, p2, 3*sizeof(double));
+#ifdef LEES_EDWARDS
+  fold_position(folded_pos1, vtmp, img);
+#else
   fold_position(folded_pos2, img);
+#endif
 
   for(i=0;i<n_constraints;i++){
     c=&constraints[i];
