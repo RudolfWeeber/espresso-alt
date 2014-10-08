@@ -194,7 +194,9 @@ enum ConstraintApplied{
 /** slitpore constraint applied */
     CONSTRAINT_SLITPORE,
 /** Constraint for a hollow cone boundary */
-    CONSTRAINT_HOLLOW_CONE
+    CONSTRAINT_HOLLOW_CONE,
+/** Particle magnetic anisotropy exists */
+    CONSTRAINT_MAGN_ANISOTROPY
 };
 /*@}*/
 
@@ -950,6 +952,14 @@ typedef struct{
 } Constraint_ext_magn_field;
 //end ER
 
+//ER
+/** Parameters for a MAGNETIC ANISOTROPY CONSTRATE constraint */
+typedef struct{
+  /** the energy (dencity) of the magnetic anisotropy of the particle */
+  double magn_anisotropy;
+} Constraint_magn_anisotropy;
+//end ER
+
 /** Parameters for a plane constraint which is needed for tunable-slip boundary conditions. */
 typedef struct {
   /** Position of the plain. Negative values mean non-existing in that direction. */
@@ -980,6 +990,8 @@ typedef struct {
     Constraint_hollow_cone hollow_cone;
     //ER
     Constraint_ext_magn_field emfield;
+    //end ER
+    Constraint_magn_anisotropy magnaniso;
     //end ER
     Constraint_plane plane;
   } c;

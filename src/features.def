@@ -52,6 +52,7 @@ MMM1D_GPU                       requires CUDA
 
 /* Magnetostatics */
 DIPOLES
+MAGN_ANISOTROPY			 implies DIPOLES, VIRTUAL_SITES, ROTATION_PER_PARTICLE 
 DP3M                            equals DIPOLES and FFTW
 
 /* Virtual sites features */

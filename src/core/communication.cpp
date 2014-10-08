@@ -145,11 +145,13 @@ MPI_Comm comm_cart;
   CB(mpi_galilei_transform_slave) \
   CB(mpi_setup_reaction_slave) \
   CB(mpi_send_rotation_slave) \
+  CB(mpi_send_particle_magn_aniso_energy_slave) \
   CB(mpi_external_potential_broadcast_slave) \
   CB(mpi_external_potential_tabulated_read_potential_file_slave) \
   CB(mpi_external_potential_sum_energies_slave) \
   CB(mpi_observable_lb_radial_velocity_profile_slave) \
   CB(mpiRuntimeErrorCollectorGatherSlave)        \
+  CB(mpi_send_particle_quatu_slave) \
 
 // create the forward declarations
 #define CB(name) void name(int node, int param);
@@ -931,6 +933,78 @@ void mpi_send_dipm_slave(int pnode, int part)
 #ifdef ROTATION
     convert_quatu_to_dip(p->r.quatu, p->p.dipm, p->r.dip);
 #endif
+  }
+
+  on_particle_change();
+#endif
+}
+
+/********************* REQ_SET_MAGN_ANISO_ENERGY ********/
+
+#if defined(DIPOLES) && defined(MAGN_ANISOTROPY)
+void mpi_send_particle_magn_aniso_energy(int pnode, int part, double magn_aniso_energy)
+{
+  mpi_call(mpi_send_particle_magn_aniso_energy_slave, pnode, part);
+
+  if (pnode == this_node) {
+    Particle *p = local_particles[part];
+    /* here the setting actually happens, if the particle belongs to the local node */
+    p->p.magn_aniso_energy = magn_aniso_energy;
+  }
+  else {
+    MPI_Send(&magn_aniso_energy, 1, MPI_DOUBLE, pnode, SOME_TAG, comm_cart);
+  }
+
+  on_particle_change();
+}
+#endif
+
+void mpi_send_particle_magn_aniso_energy_slave(int pnode, int part)
+{
+#if defined(DIPOLES) && defined(MAGN_ANISOTROPY)
+  double s_buf = 0.;
+  if (pnode == this_node) {
+    Particle *p = local_particles[part];
+    MPI_Status status;
+    MPI_Recv(&s_buf, 1, MPI_DOUBLE, 0, SOME_TAG, comm_cart, &status);
+    /* here the setting happens for nonlocal nodes */
+	p->p.magn_aniso_energy = s_buf;
+  }
+
+  on_particle_change();
+#endif
+}
+
+/********************* REQ_SET_MAGN_ANISO_AXIS ********/
+void mpi_send_particle_quatu(int pnode, int part, double axis[3])
+{
+#ifdef ROTATION
+  mpi_call(mpi_send_particle_quatu_slave, pnode, part);
+
+  if (pnode == this_node) {
+    double axisl;
+    Particle *p = local_particles[part];
+    convert_quatu_to_quat(axis, p->r.quat);
+    convert_quat_to_quatu(p->r.quat, p->r.quatu);
+ 
+  }
+  else {
+    MPI_Send(axis, 3, MPI_DOUBLE, pnode, SOME_TAG, comm_cart);
+  }
+
+  on_particle_change();
+#endif 
+}
+
+void mpi_send_particle_quatu_slave(int pnode, int part)
+{
+#if defined(ROTATION) 
+  double axisl;
+  if (pnode == this_node) {
+    Particle *p = local_particles[part];
+	MPI_Recv(p->r.quatu, 3, MPI_DOUBLE, 0, SOME_TAG,
+	     comm_cart, MPI_STATUS_IGNORE);
+    convert_quatu_to_quat(p->r.quatu, p->r.quat);
   }
 
   on_particle_change();
