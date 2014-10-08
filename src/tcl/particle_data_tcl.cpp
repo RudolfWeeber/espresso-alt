@@ -162,21 +162,21 @@ void tclcommand_part_print_quatu(Particle *part, char *buffer, Tcl_Interp *inter
 #ifdef DIPOLES
 void tclcommand_part_print_dip(Particle *part, char *buffer, Tcl_Interp *interp)
 {
- #ifdef MAGN_ANISOTROPY
- if (ifParticleIsVirtual(part))
- {
- #endif
+//  #ifdef MAGN_ANISOTROPY
+//  if (ifParticleIsVirtual(part))
+//  {
+//  #endif
   Tcl_PrintDouble(interp, part->r.dip[0], buffer);
   Tcl_AppendResult(interp, buffer, " ", (char *)NULL);
   Tcl_PrintDouble(interp, part->r.dip[1], buffer);
   Tcl_AppendResult(interp, buffer, " ", (char *)NULL);
   Tcl_PrintDouble(interp, part->r.dip[2], buffer);
   Tcl_AppendResult(interp, buffer, (char *)NULL);
- #ifdef MAGN_ANISOTROPY
- } else {
-  Tcl_AppendResult(interp, " dipole moment might may be assigned to virtual sites only", (char *)NULL);
- }
- #endif   
+//  #ifdef MAGN_ANISOTROPY
+//  } else {
+//   Tcl_AppendResult(interp, " dipole moment might may be assigned to virtual sites only", (char *)NULL);
+//  }
+//  #endif   
 }
 
 #ifdef MAGN_ANISOTROPY
