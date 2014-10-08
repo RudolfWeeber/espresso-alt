@@ -2217,6 +2217,14 @@ void add_magn_anisotropy_force(Particle *p1, Constraint_magn_anisotropy *c)
   double cosres, torque_i;
   Particle* rp1;
 
+  if (p1->p.dipm>0 && !ifParticleIsVirtual(p1))
+  {
+      ostringstream msg;
+      msg <<"When the magnetic anisotropy constraint is active, dipole moments may only be assigned to virtual particles. Particle id: "<< p1->p.identity;
+      runtimeError(msg);
+      return;
+  }
+
   if ((ifParticleIsVirtual(p1)) && (p1->p.dipm>0))
   {
 	  rp1 = vs_relative_get_real_particle(p1);

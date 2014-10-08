@@ -2264,10 +2264,6 @@ int tclcommand_part_parse_cmd(Tcl_Interp *interp, int argc, char **argv,
 
 #ifdef DIPOLES
     else if (ARG0_IS_S("dip")) {
-  #ifdef MAGN_ANISOTROPY
-	Particle *p1 = local_particles[part_num];
-	if (ifParticleIsVirtual(p1)) {
-  #endif
       if (quat_set) {
 	      Tcl_AppendResult(interp, "(vector) dipole and orientation can not be set at the same time", (char *)NULL);	
         return TCL_ERROR;
@@ -2279,19 +2275,8 @@ int tclcommand_part_parse_cmd(Tcl_Interp *interp, int argc, char **argv,
       err = tclcommand_part_parse_dip(interp, argc-1, argv+1, part_num, &change);
       dip_set = 1;
     }
-  #ifdef MAGN_ANISOTROPY
-	else {
-		Tcl_AppendResult(interp, "in case of presence of the magnetic anisotropy the dipole moment should be assigned to the corresponding virtual particle", (char *)NULL);	
-        return TCL_ERROR;
-	}
-	}
-  #endif
 
     else if (ARG0_IS_S("dipm")) {
-  #ifdef MAGN_ANISOTROPY
-	 Particle *p1 = local_particles[part_num];
-	 if (ifParticleIsVirtual(p1)) {
-  #endif
       if (dip_set) {
 	      Tcl_AppendResult(interp, "(vector) dipole and scalar dipole moment can not be set at the same time", (char *)NULL);	
         return TCL_ERROR;
@@ -2299,13 +2284,6 @@ int tclcommand_part_parse_cmd(Tcl_Interp *interp, int argc, char **argv,
       err = tclcommand_part_parse_dipm(interp, argc-1, argv+1, part_num, &change);
       dipm_set = 1;
     }
-  #ifdef MAGN_ANISOTROPY
-	else {
-		Tcl_AppendResult(interp, "in case of presence of the magnetic anisotropy the dipole moment should be assigned to the corresponding virtual particle", (char *)NULL);	
-        return TCL_ERROR;
-	}
-	}
-  #endif
  
  #ifdef MAGN_ANISOTROPY
 	else if (ARG0_IS_S("magn_aniso_energy")) {
@@ -2316,11 +2294,14 @@ int tclcommand_part_parse_cmd(Tcl_Interp *interp, int argc, char **argv,
 		}
 		err = tclcommand_part_parse_magn_aniso_energy(interp, argc-1, argv+1, part_num, &change);
 	}	
+ #endif
+#endif
+
+#ifdef ROTATION
 	else if (ARG0_IS_S("quatu")) {
 		Particle *p1 = local_particles[part_num];
 		err = tclcommand_part_parse_quatu(interp, argc-1, argv+1, part_num, &change);
 	}
- #endif
 
 #endif
 

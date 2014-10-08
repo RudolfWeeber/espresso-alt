@@ -654,6 +654,7 @@ void propagate_vel()
 #if defined(VIRTUAL_SITES) && !defined(MAGN_ANISOTROPY) 
        if (ifParticleIsVirtual(&p[i])) continue;
 #endif
+
 #ifdef VIRTUAL_SITES
        if (!ifParticleIsVirtual(&p[i]))  // calculation of the translation DoF are performed only for a "real" particle
 #endif
