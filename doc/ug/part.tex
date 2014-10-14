@@ -881,16 +881,23 @@ non-initializing a direction of the constraint values of the positions
 have to be negative. For the tunable-slip boundary interactions you
 have to set \emph{two} constraints.
 
+\minisec{Example}
+To create an infinite plane in $z$-direction at $z=20.0$ of type id 1,
+use:
+\begin{code}
+  constraint plane cell -10 -10 20 type 1
+\end{code}
+
 The use of variant \variant{12} requires the description for a 
 magneto-active particle of both magnetic dipole moment and anisotropy 
 energy along with the direction of the easy axis. The letter is 
 associated with the director of the particle, i.e. is set by the value 
 of \var{quatu} property. To specify the dipole moment it is necessary 
-to create a virtual particle which will be related to corresponding 
-\"real\" one and will be situated at the same position. 
+to create a virtual particle, using the VS\_RELATIVE framework, which will be related to corresponding 
+non-virtual particle and will be situated at the same position. 
 
 \minisec{Example}
-The first (real) particle possess anisotropy energy and axis parallel 
+The first (non-virtual) particle possess anisotropy energy and axis parallel 
 to the \var{Ox} and the related virtual particle carries dipole 
 magnetic moment with value of 2.0 and oriented to direction of 
 \var{Oy}:
@@ -898,12 +905,12 @@ magnetic moment with value of 2.0 and oriented to direction of
   constraint magnetic_anisotropy
   
   part 0 magn_aniso_energy 1.0 quatu 1 0 0
-  part 1 vs_related 0 0 dip 0 1 0
+  part 1 virtual 1 vs_related 0 0 dip 0 1 0
   part 1 dipm 2.0
 \end{code}
 
-Magnetic anisotropy affect the rotation of the particle by the addition 
-torques due to interaction between dipole moment and anisotropy axis, 
+Magnetic anisotropy affect the rotation of the particles by the addition 
+torques due to the interaction between dipole moment and anisotropy axis, 
 which is described in uniaxial case by the potential:
 \begin{equation}
 U_{ma}=-E_{ma}\(\vec{e}\cdot\vec{n}\)^2,
@@ -911,12 +918,6 @@ U_{ma}=-E_{ma}\(\vec{e}\cdot\vec{n}\)^2,
 here $\vec{e}$ and $\vec{n}$ are unit vectors of the directions of 
 particle magnetic dipole moment and anisotropy axis respectively.
 
-\minisec{Example}
-To create an infinite plane in $z$-direction at $z=20.0$ of type id 1,
-use:
-\begin{code}
-  constraint plane cell -10 -10 20 type 1
-\end{code}
 
 \subsection{Deleting a constraint}
 \begin{essyntax}
