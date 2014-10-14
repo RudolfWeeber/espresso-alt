@@ -53,7 +53,7 @@ integrate 10000
 
 # Check energy
 if {[expr abs([analyze energy magnetic]-(-[part 0 print magn_aniso_energy]))]>$calc_accuracy} {
-puts "Calculated value of the magnetic anisotropy energy is wrong: [analyze energy magnetic] (must be: -[part 0 print magn_aniso_energy])"
+error "Calculated value of the magnetic anisotropy energy is wrong: [analyze energy magnetic] (must be: -[part 0 print magn_aniso_energy])"
 return 1
 } else {
 puts "1. Calculated value of magnetic anisotropy energy is correct: [analyze energy magnetic]"
@@ -61,7 +61,7 @@ puts "1. Calculated value of magnetic anisotropy energy is correct: [analyze ene
 
 # Check coordinates
 if { [expr abs( sin([PI]/4)-[lindex [part 10000 print quatu] 0] )]>$calc_accuracy || [expr abs( sin([PI]/4)-[lindex [part 0 print quatu] 0] )]>$calc_accuracy } {
-puts "The result X-coordinate of the magnetic moment ([lindex [part 10000 print dip] 0]) and/or anisotropy axis ([lindex [part 0 print quatu] 0]) is wrong and must be: [expr sin([PI]/4)]"
+error "The result X-coordinate of the magnetic moment ([lindex [part 10000 print dip] 0]) and/or anisotropy axis ([lindex [part 0 print quatu] 0]) is wrong and must be: [expr sin([PI]/4)]"
 return 1
 } else {
 puts "2. Calculated coordinates of the particle magnetic moment and easy axis are correct"
