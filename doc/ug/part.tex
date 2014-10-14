@@ -1,19 +1,19 @@
 % Copyright (C) 2010,2011,2012,2013,2014 The ESPResSo project
-% Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2009,2010 
+% Copyright (C) 2002,2003,2004,2005,2006,2007,2008,2009,2010
 %   Max-Planck-Institute for Polymer Research, Theory Group
-%  
+%
 % This file is part of ESPResSo.
-%   
+%
 % ESPResSo is free software: you can redistribute it and/or modify it
 % under the terms of the GNU General Public License as published by the
 % Free Software Foundation, either version 3 of the License, or (at your
 % option) any later version.
-%  
+%
 % ESPResSo is distributed in the hope that it will be useful, but
 % WITHOUT ANY WARRANTY; without even the implied warranty of
 % MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 % General Public License for more details.
-%  
+%
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %
@@ -54,8 +54,9 @@
   \require{9}{\opt{gamma \var{g}}}
   \require{10}{\opt{rotation \var{rot}}}
   \require{11}{\opt{solvation \var{lA} \var{kA} \var{lB} \var{kB}}}
+  \require{2,6,8,12}{\opt{magn\_aniso\_energy \var{Ema}}}
   \begin{features}
-    \required[1]{ELECTROSTATICS} 
+    \required[1]{ELECTROSTATICS}
     \required[2]{ROTATION}
     \required[3]{EXTERNAL_FORCES}
     \required[4]{EXCLUSION}
@@ -66,6 +67,7 @@
     \required[9]{LANGEVIN\_PER\_PARTICLE}
     \required[10]{ROTATION\_PER\_PARTICLE}
     \required[11]{SHANCHEN}
+    \required[12]{MAGN\_ANISOTROPY}
   \end{features}
 \end{essyntax}
 
@@ -87,9 +89,9 @@ set first because of the spatial decomposition.
   this particle to $(vx,vy,vz)$. The velocity remains variable and will be changed
   during integration.
 \item[\opt{f \var{fx} \var{fy} \var{fz}}] Set the force acting on this particle
-  to $(fx,fy,fz)$. The force remains variable and will be changed during integration. 
+  to $(fx,fy,fz)$. The force remains variable and will be changed during integration.
   However, whereas the velocity is modified with respect to the velocity you set
-  upon integration, the force it recomputed during the integration step and any 
+  upon integration, the force it recomputed during the integration step and any
   force set in this way is lost during the integration step.
 \item[\opt{bond \var{bondid} \var{pid2}\dots}]
   Restrictions: \var{bondid} $\geq 0$; \var{pid2} must
@@ -179,6 +181,8 @@ set first because of the spatial decomposition.
 \item[\opt{solvation \var{lA} \var{kA} \var{lB} \var{kB}}] Sets the
   four solvation coupling constants for the two components of a
   Shan-Chen fluid, as documented in Section \ref{sec:scmd-coupling}.
+\item[\opt{magn\_aniso\_energy \var{Ema}}] Sets the energy of the 
+  uniaxial magnetic anisotropy of the particle. The default is 0.
 \end{arguments}
 
 \warning{The options \opt{omega}, \opt{torque}, and \opt{tbf} are
@@ -189,10 +193,10 @@ set first because of the spatial decomposition.
 \begin{essyntax}
   \variant{1}
   part \var{pid} print
-  \optlong{\alt{id \asep pos \asep type \asep folded_position \asep 
-      type \asep q \asep v \asep f \asep torque_body \asep torque_lab 
-      \asep body_frame_velocity \asep fix \asep ext_force 
-      \asep ext_torque \asep bond \asep exclusions 
+  \optlong{\alt{id \asep pos \asep type \asep folded_position \asep
+      type \asep q \asep v \asep f \asep torque_body \asep torque_lab
+      \asep body_frame_velocity \asep fix \asep ext_force
+      \asep ext_torque \asep bond \asep exclusions
       \mbox{connections \opt{\var{range}}}}}\dots
   \variant{2} part
 \end{essyntax}
@@ -218,8 +222,8 @@ and read in data from a blockfile, for instance if you output the
 variable in both frames!
 
 The \keyword{body_frame_velocity} command is a print-only command that
-gives the velocity in the body frame, which can be useful for 
-determining the translational diffusion tensor of an anisotropic 
+gives the velocity in the body frame, which can be useful for
+determining the translational diffusion tensor of an anisotropic
 particle via the velocity auto-correlation (Green-Kubo) method.
 
 \minisec{Example}
@@ -237,7 +241,7 @@ connectivity of the particle up to \var{range} (defaults to 1). For
 particle 5 in a linear chain the result up to \var{range} = 3 would
 look like:
 \begin{tclcode}
-{ { 4 } { 6 } } { { 4 3 } { 6 7 } } { {4 3 2 } { 6 7 8 } } 
+{ { 4 } { 6 } } { { 4 3 } { 6 7 } } { {4 3 2 } { 6 7 8 } }
 \end{tclcode}
 The function is useful when you want to create bonded interactions to
 all other particles a certain particle is connected to. Note that this
@@ -248,7 +252,7 @@ If none of the options is specified, it returns all properties of the
 particle, if it exists, in the form
 \begin{tclcode}
   0 pos 2.1 6.4 3.1 type 0 q -1.0 v 0.0 0.0 0.0 f 0.0 0.0 0.0
-  bonds { {0 480} {0 368} ... } 
+  bonds { {0 480} {0 368} ... }
 \end{tclcode}
 which may be used as an input to this function later on. The first
 integer is the particle number.
@@ -257,17 +261,17 @@ Variant \variant{2} returns the properties of all stored particles in
 a tcl-list with the same format as specified above:
 \begin{tclcode}
 {0 pos 2.1 6.4 3.1 type 0 q -1.0 v 0.0 0.0 0.0 f 0.0 0.0 0.0
- bonds{{0 480}{0 368}...}} 
+ bonds{{0 480}{0 368}...}}
 {1 pos 1.0 2.0 3.0 type 0 q 1.0 v 0.0 0.0 0.0 f 0.0 0.0 0.0
- bonds{{0 340}{0 83}...}} 
+ bonds{{0 340}{0 83}...}}
 {2...{{...}...}}
 {3...{{...}...}}
 ...
 \end{tclcode}
 
-By default the particle position returned is {\bf unfolded}, for convenience in diffusion calculations etc. 
-If \feature{LEES_EDWARDS} is turned on then particle positions are output folded by default, 
-to try and avoid the common error that imaged positions and un-imaged velocities (or vice-versa) are saved together.  
+By default the particle position returned is {\bf unfolded}, for convenience in diffusion calculations etc.
+If \feature{LEES_EDWARDS} is turned on then particle positions are output folded by default,
+to try and avoid the common error that imaged positions and un-imaged velocities (or vice-versa) are saved together.
 If the unfolded position is requested explicitly in a Lees-Edwards simulation, then the unfolded velocities will also be returned.
 
 
@@ -290,7 +294,7 @@ will delete all currently defined exclusions.
   \variant{1} part auto\_exclusions \opt{\var{range}}
   \variant{2} part delete\_exclusions
   \begin{features}
-    \required{EXCLUSIONS} 
+    \required{EXCLUSIONS}
   \end{features}
 \end{essyntax}
 
@@ -319,18 +323,18 @@ system.
 
 \newescommand{polymer}
 \begin{essyntax}
-  polymer 
+  polymer
   \var{num\_polymers} \var{monomers\_per\_chain}
   \var{bond\_length}\\
-  \opt{start \var{pid}} 
+  \opt{start \var{pid}}
   \opt{pos \var{x} \var{y} \var{z}}
-  \opt{mode \alt{RW \asep SAW \asep PSAW} 
-    \opt{\var{shield} \opt{\var{try_\mathrm{max}}}}} 
-  \require{1}{\opt{charge \var{q}}} 
+  \opt{mode \alt{RW \asep SAW \asep PSAW}
+    \opt{\var{shield} \opt{\var{try_\mathrm{max}}}}}
+  \require{1}{\opt{charge \var{q}}}
   \require{1}{\opt{distance \var{d_\mathrm{charged}}}}
   \opt{types \var{typeid_\mathrm{neutral}}
-    \opt{\var{typeid_\mathrm{charged}}}} 
-  \opt{bond \var{bondid}} 
+    \opt{\var{typeid_\mathrm{charged}}}}
+  \opt{bond \var{bondid}}
   \opt{angle \var{\phi} \opt{\var{\theta} \opt{\var{x} \var{y}
         \var{z}}}}
   \require{2}{\opt{constraints}}
@@ -363,7 +367,7 @@ set up to be \var{bond\_length}.
 \item[\opt{pos \var{x} \var{y} \var{z}}] Sets the position of the
   first monomer in the chain to \var{x}, \var{y}, \var{z} (defaults to
   a randomly chosen value)
-  
+
 \item[\opt{mode \alt{RW  \asep  PSAW  \asep  SAW} \opt{\var{shield}
       \opt{\var{try_\mathrm{max}}}}}]
   Selects the setup mode:
@@ -425,9 +429,9 @@ set up to be \var{bond\_length}.
 \newescommand{counterions}
 \begin{essyntax}
   counterions
-  \var{N} 
-  \opt{start \var{pid}} 
-  \opt{mode \alt{SAW \asep RW} \opt{\var{shield} \opt{\var{try_\mathrm{max}} }}} 
+  \var{N}
+  \opt{start \var{pid}}
+  \opt{mode \alt{SAW \asep RW} \opt{\var{shield} \opt{\var{try_\mathrm{max}} }}}
   \require{1}{\opt{charge \var{val}}}
   \opt{type \var{typeid}}
   \begin{features}
@@ -453,11 +457,11 @@ This command will create \var{N} counterions in the simulation box.
 \subsection{\texttt{salt}: Setting up salt ions}
 \newescommand{salt}
 \begin{essyntax}
-  salt 
-  \var{N_+} \var{N_-} 
-  \opt{start \var{pid}} 
+  salt
+  \var{N_+} \var{N_-}
+  \opt{start \var{pid}}
   \opt{mode \alt{SAW \asep RW} \opt{\var{shield} \opt{\var{try_\mathrm{max}}}}}
-  \require{1}{\opt{charges \var{val_+} \opt{\var{val_-}}}} 
+  \require{1}{\opt{charges \var{val_+} \opt{\var{val_-}}}}
   \opt{types \var{typeid_+} \opt{\var{typeid_-}}}
   \opt{rad \var{r}}
   \begin{features}
@@ -489,9 +493,9 @@ of charge \var{val_+} and \var{val_-} within the simulation box.
 \subsection{\texttt{diamond}: Setting up diamond polymer networks}
 \newescommand{diamond}
 \begin{essyntax}
-  diamond 
-  \var{a} \var{bond\_length} \var{monomers\_per\_chain} 
-  \opt{counterions \var{N_\mathrm{CI}}}\\ 
+  diamond
+  \var{a} \var{bond\_length} \var{monomers\_per\_chain}
+  \opt{counterions \var{N_\mathrm{CI}}}\\
   \require{1}{\opt{charges \var{val_\mathrm{node}}
       \var{val_\mathrm{monomer}} \var{val_\mathrm{CI}}}}
   \require{1}{\opt{distance \var{d_\mathrm{charged}}}}
@@ -502,7 +506,7 @@ of charge \var{val_+} and \var{val_-} within the simulation box.
 \end{essyntax}
 
 Creates a diamond-shaped polymer network with 8 tetra-functional nodes
-connected by $2*8$ polymer chains of length \var{monomers\_per\_chain} in 
+connected by $2*8$ polymer chains of length \var{monomers\_per\_chain} in
 a unit cell of length \var{a}. Chain monomers are placed at a mutual distance \var{bond\_length}
 along the vector connecting network nodes.
 The polymer is created starting from particle ID 0. Nodes are assigned type 0,
@@ -541,9 +545,9 @@ For inter-particle bonds interaction $0$ is taken which must be a two-particle b
 \subsection{\texttt{icosaeder}: Setting up an icosaeder}
 \newescommand{icosaeder}
 \begin{essyntax}
-  icosaeder 
-  \var{a} \var{monomers\_per\_chain} 
-  \opt{counterions \var{N_\mathrm{CI}}} 
+  icosaeder
+  \var{a} \var{monomers\_per\_chain}
+  \opt{counterions \var{N_\mathrm{CI}}}
   \require{1}{\opt{charges \var{val_\mathrm{monomers}} \var{val_\mathrm{CI}}}}
   \require{1}{\opt{distance \var{d_\mathrm{charged}}}}
   \begin{features}
@@ -581,14 +585,14 @@ pentagons and the interconnecting links. For an example, see figure \ref{fig:ful
 \subsection{\texttt{crosslink}: Cross-linking polymers}
 \newescommand{crosslink}
 \begin{essyntax}
-  crosslink 
-  \var{num\_polymer} \var{monomers\_per\_chain} 
-  \opt{start \var{pid}} 
+  crosslink
+  \var{num\_polymer} \var{monomers\_per\_chain}
+  \opt{start \var{pid}}
   \opt{catch \var{r_\mathrm{catch}}}
-  \opt{distLink \var{link\_dist}} 
-  \opt{distChain \var{chain\_dist}} 
-  \opt{FENE \var{bondid}} 
-  \opt{trials \var{try_\mathrm{max}}} 
+  \opt{distLink \var{link\_dist}}
+  \opt{distChain \var{chain\_dist}}
+  \opt{FENE \var{bondid}}
+  \opt{trials \var{try_\mathrm{max}}}
 \end{essyntax}
 
 Attempts to end-crosslink the current configuration of
@@ -618,7 +622,7 @@ successfully connected.
 \newescommand[copy-particles]{copy\_particles}
 \begin{essyntax}
   copy_particles
-  \opt{set \var{id1} \var{id2} \dots \asep range \var{from} {to} \dots} 
+  \opt{set \var{id1} \var{id2} \dots \asep range \var{from} {to} \dots}
   \opt{shift \var{s\_x} \var{s\_y} \var{s\_z}}
 \end{essyntax}
 
@@ -652,45 +656,45 @@ All these examples do the same - making exact copies of particles 1 through 4.
 \newescommand{constraint}
 
 \begin{essyntax}
-  \variant{1} 
-  constraint wall normal \var{n_x} \var{n_y} \var{n_z} 
+  \variant{1}
+  constraint wall normal \var{n_x} \var{n_y} \var{n_z}
   dist \var{d} type \var{id} \opt{penetrable \var{flag}} \opt{reflecting \var{flag}} \opt{only_positive \var{flag}}
-  
+
   \variant{2}
-  constraint sphere center \var{c_x} \var{c_y} \var{c_z} 
+  constraint sphere center \var{c_x} \var{c_y} \var{c_z}
   radius \var{rad} direction \var{direction} type \var{id} \opt{penetrable \var{flag}} \opt{reflecting \var{flag}}
-  
+
   \variant{3}
-  constraint cylinder center \var{c_x} \var{c_y} \var{c_z} 
-  axis \var{n_x} \var{n_y} \var{n_z} 
-  radius \var{rad} length \var{length} 
-  direction \var{direction} 
+  constraint cylinder center \var{c_x} \var{c_y} \var{c_z}
+  axis \var{n_x} \var{n_y} \var{n_z}
+  radius \var{rad} length \var{length}
+  direction \var{direction}
   type \var{id}  \opt{penetrable \var{flag}} \opt{reflecting \var{flag}}
-  
+
   \variant{4}
-  constraint rhomboid corner \var{p_x} \var{p_y} \var{p_z} 
-  a \var{a_x} \var{a_y} \var{a_z} 
+  constraint rhomboid corner \var{p_x} \var{p_y} \var{p_z}
+  a \var{a_x} \var{a_y} \var{a_z}
   b \var{b_x} \var{b_y} \var{b_z} \\
-  c \var{c_x} \var{c_y} \var{c_z} 
-  direction \var{direction} 
+  c \var{c_x} \var{c_y} \var{c_z}
+  direction \var{direction}
   type \var{id}  \opt{penetrable \var{flag}} \opt{reflecting \var{flag}}
-  
+
   \variant{5}
-  constraint maze nsphere \var{n} 
+  constraint maze nsphere \var{n}
   dim \var{d} sphrad \var{r_s} cylrad \var{r_c}
   type \var{id} \opt{penetrable \var{flag}}
-  
-  \variant{6}  
-  constraint pore center \var{c_x} \var{c_y} \var{c_z} 
-  axis \var{n_x} \var{n_y} \var{n_z} 
-  radius \var{rad} length \var{length} 
-  type \var{id} 
+
+  \variant{6}
+  constraint pore center \var{c_x} \var{c_y} \var{c_z}
+  axis \var{n_x} \var{n_y} \var{n_z}
+  radius \var{rad} length \var{length}
+  type \var{id}
 
   \variant{7}
   constraint stomatocyte center \var{x} \var{y} \var{z} orientation \var{ox} \var{oy} \var{oz}
-  outer_radius \var{Ro} inner_radius \var{Ri} layer_width \var{w} direction \var{direction} 
+  outer_radius \var{Ro} inner_radius \var{Ri} layer_width \var{w} direction \var{direction}
   type \var{id} \opt{penetrable \var{flag}} \opt{reflecting \var{flag}}
-  
+
   \variant{8}
   constraint slitpore
   pore_mouth \var{z} \
@@ -698,38 +702,44 @@ All these examples do the same - making exact copies of particles 1 through 4.
              pore_width \var{w} \
              pore_length \var{l} \
              upper_smoothing_radius \var{us} \
-             lower_smoothing_radius \var{ls} 
-  
-  
+             lower_smoothing_radius \var{ls}
+
+
   \require{1}{%
     \variant{9}
-    constraint rod center \var{c_x} \var{c_y} 
+    constraint rod center \var{c_x} \var{c_y}
     lambda \var{lambda}
-  } 
-  
+  }
+
   \require{1}{%
     \variant{10}
     constraint plate height \var{h}
-    sigma \var{sigma} 
+    sigma \var{sigma}
   }
-  
+
   \require{2,3}{%
     \variant{11}
-    constraint ext_magn_field \var{f_x} \var{f_y} \var{f_z} 
+    constraint ext_magn_field \var{f_x} \var{f_y} \var{f_z}
   }
-  
-  \variant{12} 
-  constraint plane cell \var{x} \var{y} \var{z} 
+
+  \variant{12}
+  constraint plane cell \var{x} \var{y} \var{z}
   type \var{id}
 
   \variant{13}
-  constraint mindist_position \var{x} \var{y} \var{z} 
+  constraint mindist_position \var{x} \var{y} \var{z}
+  
+  \require{3,4}{%
+    \variant{14}
+    constraint magnetic_anisotropy
+  } 
 
   \begin{features}
     \required{CONSTRAINTS}
     \required[1]{ELECTROSTATICS}
     \required[2]{ROTATION}
     \required[3]{DIPOLES}
+    \required[4]{MAGN_ANISOTROPY}
   \end{features}
 \end{essyntax}
 
@@ -738,7 +748,7 @@ defined to interact with desired particles. Variants \variant{1} to \variant{7}
 create interactions via a non-bonded interaction potential, where the distance
 between the two particles is replaced by the
 distance of the center of the particle to the surface. The constraints are
-identified like a particle via its type for the non-bonded interaction. 
+identified like a particle via its type for the non-bonded interaction.
 After a type is defined for each constraint one has
 to define
 the interaction of all different particle types with the constraint using
@@ -746,9 +756,9 @@ the \codebox{inter} command. In variants \variant{1} to \variant{7}, constraints
  are able to be penetrated if \var{flag} is set to 1. Otherwise, when the
  penetrable option is ignored or \var{flag} is set to 0, the constraint
  cannot be violated, i.e. no particle can go through the constraint surface.
- In variants \variant{1} to \variant{4} and \variant{7} it is also possible to specify a flag 
+ In variants \variant{1} to \variant{4} and \variant{7} it is also possible to specify a flag
  indicating if the constraints should be reflecting. The flags can equal 1 or 2.
- The flag 1 corresponds to a reflection process where the normal component of the 
+ The flag 1 corresponds to a reflection process where the normal component of the
  velocity is reflected and the tangential component remains unchanged. If the
  flag is 2, also the tangential component is turned around, so that a bounce back
  motion is performed. The second variant is useful for boundaries of DPD.
@@ -774,11 +784,15 @@ Flow.
 Variant \variant{13} calculates the smallest distance to all non-penetrable
 constraints, that can be repulsive (wall, cylinder, sphere, rhomboid, maze, pore, slitpore).
 Negative distances mean that the position is ``within'' the area that
-particles should not access. Helpful to find initial configurations.) 
+particles should not access. Helpful to find initial configurations.)
+
+Variant \variant{14} enables uniaxial magnetic anisotropy in all particles where 
+corresponding parameter $magn_aniso_energy\neq0$ and the directions of the anisotropy axes
+are determined by the coordinates of particle director \var{quatu}. 
 
 The resulting surface in variant \variant{1} is a plane defined by the
 normal vector \var{n_x} \var{n_y} \var{n_z} and the distance
-\var{d} from the origin. The force acts in direction of the normal. 
+\var{d} from the origin. The force acts in direction of the normal.
 Note that the \var{d} describes the distance from the origin in units
 of the normal vector so that the product of $d$ and $n$ is a point on the
 surface. Therefore negative distances are quite common!
@@ -786,20 +800,20 @@ surface. Therefore negative distances are quite common!
 The resulting surface in variant
 \variant{2} is a sphere with center \var{c_x} \var{c_y} \var{c_z} and radius
 \var{rad}. The \var{direction} determines the force direction, -1 or
-\opt{inside} for inward and +1 or \opt{outside} for outward. 
+\opt{inside} for inward and +1 or \opt{outside} for outward.
 
 The resulting surface
 in variant \variant{3} is a cylinder with center \var{c_x} \var{c_y}
-\var{c_z} and radius \var{rad}. The \var{length} parameter is \textbf{half} 
+\var{c_z} and radius \var{rad}. The \var{length} parameter is \textbf{half}
 of the cylinder length. The \var{axis} is a
 vector along the cylinder axis, which is normalized in the program.
 The \var{direction} is defined the same way as for the spherical
-constraint. 
+constraint.
 
-The resulting surface in variant \variant{4} is a rhomboid, defined by one 
-corner located at \var{p_x} \var{p_y} \var{p_z} and three adjacent edges, 
+The resulting surface in variant \variant{4} is a rhomboid, defined by one
+corner located at \var{p_x} \var{p_y} \var{p_z} and three adjacent edges,
 defined by the three vectors connecting the corner p with it's three neighboring
-corners, a (\var{a_x} \var{a_y} \var{a_z}), b (\var{b_x} \var{b_y} \var{b_z}) 
+corners, a (\var{a_x} \var{a_y} \var{a_z}), b (\var{b_x} \var{b_y} \var{b_z})
 and c (\var{c_x} \var{c_y} \var{c_z}).
 
 The resulting surface in variant \variant{5} is \var{n}
@@ -814,7 +828,7 @@ Variant \variant{6} sets up a cylindrical pore similar to variant
 \variant{3} with a center \var{c_x} \var{c_y} \var{c_z} and radius
 \var{rad}. The \var{length} parameter is \textbf{half} of the cylinder
 length. The \var{axis} is a vector along the cylinder axis, which is
-normalized in the program. The argument \codebox{radius \var{rad}} 
+normalized in the program. The argument \codebox{radius \var{rad}}
 can be replaced by the argument \codebox{ radii \var{rad1} \var{rad2}}
 to obtain a pore with a conical shape and corresponding opening radii.
 The first radius is in the direction opposite to the axis vector.
@@ -825,15 +839,15 @@ box, and the orientation of the (cylindrically symmetric) stomatocyte is
 given by a vector, which points in the direction of the symmetry axis, it
 does not need to be normalized. The parameters: outer_radius \var{Ro},
 inner_radius \var{Ri}, and layer_width \var{w}, specify the shape of the
-stomatocyte. Here inappropriate choices of these parameters can yield 
+stomatocyte. Here inappropriate choices of these parameters can yield
 undersired results. The width is used as a scaling parameter. That is,
 a stomatocyte given by \var{Ro}:\var{Ri}:\var{w} = 7:3:1 is half the size
 of the stomatocyte given by 7:3:2. Not all choices of the parameters give
 reasonable values for the shape of the stomatocyte, but the combination
-7:3:1 is a good point to start from when trying to modify the shape. 
+7:3:1 is a good point to start from when trying to modify the shape.
 
 In variant \variant{8}, a slit-shaped pore in a T-orientation to a flat channel
-is created. 
+is created.
 The geometry is depicted in Fig.~\ref{fig:slitpore}.
 It translationally invariant in y direction.
 The pore (lower vertical part) extends in z-direction, and the channel (upper
@@ -858,7 +872,7 @@ Variant \variant{9} specifies the electrostatic interactinos between
 the charged particles in the system and an inifinitely large plate in
 the x-y-plane at height \var{h}. The plate carries a charge density of
 \var{sigma}.
-  
+
 Variant \variant{10} specifies the dipolar coupling of particles with a
 dipolar moment to an external field \var{f_x} \var{f_y} \var{f_z}.
 
@@ -866,6 +880,36 @@ Variant \variant{11} creates an infinite plane at a fixed position. For
 non-initializing a direction of the constraint values of the positions
 have to be negative. For the tunable-slip boundary interactions you
 have to set \emph{two} constraints.
+
+The use of variant \variant{12} requires the description for a 
+magneto-active particle of both magnetic dipole moment and anisotropy 
+energy along with the direction of the easy axis. The letter is 
+associated with the director of the particle, i.e. is set by the value 
+of \var{quatu} property. To specify the dipole moment it is necessary 
+to create a virtual particle which will be related to corresponding 
+\"real\" one and will be situated at the same position. 
+
+\minisec{Example}
+The first (real) particle possess anisotropy energy and axis parallel 
+to the \var{Ox} and the related virtual particle carries dipole 
+magnetic moment with value of 2.0 and oriented to direction of 
+\var{Oy}:
+\begin{code}
+  constraint magnetic_anisotropy
+  
+  part 0 magn_aniso_energy 1.0 quatu 1 0 0
+  part 1 vs_related 0 0 dip 0 1 0
+  part 1 dipm 2.0
+\end{code}
+
+Magnetic anisotropy affect the rotation of the particle by the addition 
+torques due to interaction between dipole moment and anisotropy axis, 
+which is described in uniaxial case by the potential:
+\begin{equation}
+U_{ma}=-E_{ma}\(\vec{e}\cdot\vec{n}\)^2,
+\end{equation}  
+here $\vec{e}$ and $\vec{n}$ are unit vectors of the directions of 
+particle magnetic dipole moment and anisotropy axis respectively.
 
 \minisec{Example}
 To create an infinite plane in $z$-direction at $z=20.0$ of type id 1,
@@ -876,16 +920,16 @@ use:
 
 \subsection{Deleting a constraint}
 \begin{essyntax}
-  constraint delete \opt{\var{num}} 
+  constraint delete \opt{\var{num}}
 \end{essyntax}
 
 This command will delete constraints. If \var{num} is specified only this
 constraint will deleted, otherwise all constraints will be removed from the
-system. 
+system.
 
 \subsection{Getting the force on a constraint}
 \begin{essyntax}
-constraint force \var{n} 
+constraint force \var{n}
 \end{essyntax}
 Returns the force acting on the \var{n}th constraint. Note, however, that this
 are only forces due to interactions with particles, not with other constraints.
@@ -896,7 +940,7 @@ Similarly, the total energy does not containt constraint-constraint contribution
 
 \subsection{Getting the currently defined constraints}
 \begin{essyntax}
-constraint  \opt{\var{num}} 
+constraint  \opt{\var{num}}
 \end{essyntax}
 Prints out all constraint information. If \var{num} is specified only this
 constraint is displayed, otherwise all constraints will be printed.
@@ -947,7 +991,7 @@ center of a molecule, perform the following steps in that order
   should be placed at least roughly in the center of the molecule to
   make sure, it's on the same node as the other particles forming the
   molecule, in a simulation with more than one cpu.
-\item Make it a virtual site using 
+\item Make it a virtual site using
   \begin{essyntaxbox}
     part \var{pid} virtual 1
   \end{essyntaxbox}
@@ -1090,7 +1134,7 @@ the involved types will remove this inconsistency.  The keyword
 type, similarly giving \texttt{number} as argument will return the
 number of particles which sharing the given type.
 
-%%% Local Variables: 
+%%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "ug"
-%%% End: 
+%%% End

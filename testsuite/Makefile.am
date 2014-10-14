@@ -69,6 +69,7 @@ tests = \
 	madelung.tcl \
 	maggs.tcl \
 	magn_anisotropy_1part.tcl \
+	magn_anisotropy_multipart.tcl \
 	magnetic-field.tcl \
 	mass.tcl \
 	mass-and-rinertia.tcl \
