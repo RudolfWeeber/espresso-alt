@@ -37,7 +37,7 @@
 #ifdef DIPOLES
 
 // Calculates dipolar energy and/or force between two particles
-double calc_dipole_dipole_ia(Particle* p1, Particle *p2, int force_flag)
+double calc_dipole_dipole_ia(Particle* p1, Particle *p2, int mode)
 {
   double u,r,pe1,pe2,pe3,pe4,r3,r5,r2,r7,a,b,cc,d,ab;
 #ifdef ROTATION
@@ -57,17 +57,28 @@ double calc_dipole_dipole_ia(Particle* p1, Particle *p2, int force_flag)
   r5=r3*r2;
   r7=r5*r2;
  
+  
   // Dot products
-  pe1=p1->r.dip[0]*p2->r.dip[0]+p1->r.dip[1]*p2->r.dip[1]+p1->r.dip[2]*p2->r.dip[2];
-  pe2=p1->r.dip[0]*dr[0]+p1->r.dip[1]*dr[1]+p1->r.dip[2]*dr[2];
-  pe3=p2->r.dip[0]*dr[0]+p2->r.dip[1]*dr[1]+p2->r.dip[2]*dr[2];
-  pe4=3.0/r5;
+  if ((mode & DIPOLAR_CALC_ENERGY) || (mode & DIPOLAR_CALC_FORCE)) {
+   pe1=p1->r.dip[0]*p2->r.dip[0]+p1->r.dip[1]*p2->r.dip[1]+p1->r.dip[2]*p2->r.dip[2];
+   pe2=p1->r.dip[0]*dr[0]+p1->r.dip[1]*dr[1]+p1->r.dip[2]*dr[2];
+   pe3=p2->r.dip[0]*dr[0]+p2->r.dip[1]*dr[1]+p2->r.dip[2]*dr[2];
+   pe4=3.0/r5;
+  }
 
   // Energy, if requested
-  u= coulomb.Dprefactor* ( pe1/r3 - pe4*pe2*pe3);
+  if (mode & DIPOLAR_CALC_ENERGY) {
+    u= coulomb.Dprefactor* ( pe1/r3 - pe4*pe2*pe3);
+  }
+
+  if (mode & DIPOLAR_CALC_LOCAL_FIELD)
+  {
+   pe3=p2->r.dip[0]*dr[0]+p2->r.dip[1]*dr[1]+p2->r.dip[2]*dr[2];
+   local_field[p1->p.identity] +=coulomb.Dprefactor* (3*pe3*Vector3d(dr)/r5 -Vector3d(p2->r.dip)/r3); 
+  }
 
   // Force, if requested
-  if(force_flag) { 
+  if (mode & DIPOLAR_CALC_FORCE) { 
     a=pe4*pe1;
     b=-15.0*pe2*pe3/r7;
     ab =a+b;
@@ -120,13 +131,13 @@ double calc_dipole_dipole_ia(Particle* p1, Particle *p2, int force_flag)
    =============================================================================
 */
 
-double dawaanr_calculations(int force_flag, int energy_flag)
+double dawaanr_calculations(int mode)
 {
   double u; 
   int i,j,c,cc;
   
   if(n_nodes!=1) {fprintf(stderr,"error:  DAWAANR is just for one cpu .... \n"); exit(1);}
-  if(!(force_flag) && !(energy_flag) ) {fprintf(stderr," I don't know why you call dawaanr_caclulations with all flags zero \n"); return 0;}
+  if(mode==0)  {fprintf(stderr," I don't know why you call dawaanr_caclulations with all flags zero \n"); return 0;}
   
   // Variable to sum up the energy
   u=0;
@@ -145,7 +156,7 @@ double dawaanr_calculations(int force_flag, int energy_flag)
         if( local_cells.cell[c]->part[j].p.dipm < 1.e-11 ) 
           continue;
         // Calculate energy and/or force between the particles
-	u+=calc_dipole_dipole_ia(&local_cells.cell[c]->part[i],&local_cells.cell[c]->part[j],force_flag);
+	u+=calc_dipole_dipole_ia(&local_cells.cell[c]->part[i],&local_cells.cell[c]->part[j],mode);
       }
 
       // Calculate the ia between this particles and the particles in the 
@@ -159,7 +170,7 @@ double dawaanr_calculations(int force_flag, int energy_flag)
 	    continue;
         
 	  // Calculate energy and/or force between the particles
-	  u+=calc_dipole_dipole_ia(&local_cells.cell[c]->part[i],&local_cells.cell[cc]->part[j],force_flag);
+	  u+=calc_dipole_dipole_ia(&local_cells.cell[c]->part[i],&local_cells.cell[cc]->part[j],mode);
 	}
       }
     }
@@ -199,7 +210,7 @@ int  magnetic_dipolar_direct_sum_sanity_checks()
 /************************************************************/
 
 
-double  magnetic_dipolar_direct_sum_calculations(int force_flag, int energy_flag) {
+double  magnetic_dipolar_direct_sum_calculations(int mode) {
   Cell *cell;
   Particle *part;
   int i,c,np;
@@ -216,7 +227,7 @@ double  magnetic_dipolar_direct_sum_calculations(int force_flag, int energy_flag
 
   
   if(n_nodes!=1) {fprintf(stderr,"error: magnetic Direct Sum is just for one cpu .... \n"); exit(1);}
-  if(!(force_flag) && !(energy_flag) ) {fprintf(stderr," I don't know why you call dawaanr_caclulations with all flags zero \n"); return 0;}
+  if(mode==0)  {fprintf(stderr," I don't know why you call dawaanr_caclulations with all flags zero \n"); return 0;}
 
   x = (double *) malloc(sizeof(double)*n_part);
   y = (double *) malloc(sizeof(double)*n_part);
@@ -226,7 +237,7 @@ double  magnetic_dipolar_direct_sum_calculations(int force_flag, int energy_flag
   my = (double *) malloc(sizeof(double)*n_part);
   mz = (double *) malloc(sizeof(double)*n_part);
  
-  if(force_flag) {
+  if(mode & DIPOLAR_CALC_FORCE) {
     fx = (double *) malloc(sizeof(double)*n_part);
     fy = (double *) malloc(sizeof(double)*n_part);
     fz = (double *) malloc(sizeof(double)*n_part);
@@ -265,7 +276,7 @@ double  magnetic_dipolar_direct_sum_calculations(int force_flag, int energy_flag
 	z[dip_particles]=ppos[2];
 	 
 
-	if(force_flag) {
+	if(mode & DIPOLAR_CALC_FORCE) {
 	  fx[dip_particles]=0;
 	  fy[dip_particles]=0;
 	  fz[dip_particles]=0;
@@ -351,7 +362,7 @@ double  magnetic_dipolar_direct_sum_calculations(int force_flag, int energy_flag
     
 		  u+= pe1/r3 - 3.0*pe2*pe3/r5;
 	     
-		  if(force_flag) {
+		  if(mode & DIPOLAR_CALC_FORCE) {
 		    //force ............................
 		    a=mx[i]*mx[j]+my[i]*my[j]+mz[i]*mz[j];
 		    a=3.0*a/r5;
@@ -393,7 +404,7 @@ double  magnetic_dipolar_direct_sum_calculations(int force_flag, int energy_flag
     
     
   /* set the forces, and torques of the particles within Espresso */
-  if(force_flag) {
+  if(mode & DIPOLAR_CALC_FORCE) {
    
     dip_particles2=0;
     for (c = 0; c < local_cells.n; c++) {
@@ -431,7 +442,7 @@ double  magnetic_dipolar_direct_sum_calculations(int force_flag, int energy_flag
   free(my);
   free(mz);
  
-  if(force_flag) {
+  if(mode & DIPOLAR_CALC_FORCE) {
     free(fx);
     free(fy);
     free(fz);

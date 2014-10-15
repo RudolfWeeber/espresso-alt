@@ -66,6 +66,7 @@
 #include "external_potential.hpp"
 #include "cuda_init.hpp"
 #include "cuda_interface.hpp"
+#include "magnetizable_particles.hpp"
 
 /** whether the thermostat has to be reinitialized before integration */
 static int reinit_thermo = 1;
@@ -148,6 +149,10 @@ void on_program_start()
     /* interaction_data.c: make sure 0<->0 ia always exists */
     make_particle_type_exist(0);
   }
+
+#ifdef DIPOLES
+   init_magnetizable_particle_config();
+#endif
 }
 
 

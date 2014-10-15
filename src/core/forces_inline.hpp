@@ -218,6 +218,12 @@ inline void force_calc()
   if (iccp3m_initialized && iccp3m_cfg.set_flag)
     iccp3m_iteration();
 #endif
+
+#ifdef DIPOLES
+  if (magnetizableParticlesConfig.enabled)
+   update_dipole_moments_for_all_particles(&magnetizableParticlesConfig);
+#endif  
+  
   init_forces();
 
   switch (cell_structure.type) {

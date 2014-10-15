@@ -50,12 +50,41 @@ public:
     return d[i];
   };
 
+  Vector &operator+(Vector& a)
+  {
+   Vector<n,Scalar> result;
+   for (int i=0;i<n;i++)
+    result[i]=a[i]+d[i];
+   return result;
+  }
+  
+  Vector &operator-(Vector& a)
+  {
+   Vector<n,Scalar> result;
+   for (int i=0;i<n;i++)
+    result[i]=d[i]-a[i];
+   return result;
+  }
+
   Scalar dot(Vector<n, Scalar> b) {
     Scalar sum = 0.0;
     for(int i = 0; i < n; i++)
       sum += d[i]*b[i];
     return sum;
-  };  
+  };
+
+  void to_scalar_array(Scalar* s){
+   for (int i=0;i<n;i++)
+    s[i]=d[i];
+  }
+
+  Scalar length() {
+    Scalar sum = 0.0;
+    for(int i = 0; i < n; i++)
+      sum += d[i]*d[i];
+    return sqrt(sum);
+  };
+   
 };
 
 typedef Vector<3, double> Vector3d;

@@ -278,5 +278,48 @@ inline double dp3m_pair_energy(Particle *p1, Particle *p2,
   return 0.0;
 }
 
+
+inline void dp3m_local_field(Particle *p1, Particle *p2,
+					double *d,double dist2,double dist)
+{
+  double /* fac1,*/ adist, erfc_part_ri, coeff, exp_adist2, dist2i;
+  double mimj, mir, mjr;
+  double B_r, C_r;
+  double alpsq = dp3m.params.alpha * dp3m.params.alpha;
+ 
+  if(dist < dp3m.params.r_cut && dist > 0) {
+    adist = dp3m.params.alpha * dist;
+    /*fac1 = coulomb.Dprefactor;*/
+
+#if USE_ERFC_APPROXIMATION
+    erfc_part_ri = AS_erfc_part(adist) / dist;
+    /*  fac1 = coulomb.Dprefactor * p1->p.dipm*p2->p.dipm; IT WAS WRONG */ /* *exp(-adist*adist); */ 
+#else
+    erfc_part_ri = erfc(adist) / dist;
+    /* fac1 = coulomb.Dprefactor * p1->p.dipm*p2->p.dipm;  IT WAS WRONG*/
+#endif
+
+   pe3=p2->r.dip[0]*dr[0]+p2->r.dip[1]*dr[1]+p2->r.dip[2]*dr[2];
+
+    coeff = 2.0*dp3m.params.alpha*wupii;
+    dist2i = 1 / dist2;
+    exp_adist2 = exp(-adist*adist);
+
+    if(dp3m.params.accuracy > 5e-06)
+      B_r = (erfc_part_ri + coeff) * exp_adist2 * dist2i;
+    else
+      B_r = (erfc(adist)/dist + coeff * exp_adist2) * dist2i;
+  
+    C_r = (3*B_r + 2*alpsq*coeff*exp_adist2) * dist2i;
+
+    /*
+      printf("(%4i %4i) pair energy = %f (B_r=%15.12f C_r=%15.12f)\n",p1->p.identity,p2->p.identity,fac1*(mimj*B_r-mir*mjr*C_r),B_r,C_r);
+    */
+  
+    /* old line return fac1 * ( mimj*B_r - mir*mjr * C_r );*/
+    local_field[p1->p.identity] +=coulomb.Dprefactor *(C_r*pe3*Vector3d(d) -B_r*Vector3d(p2->r.dip)); 
+  }
+}
+
 #endif /* DP3M */
 #endif /* _P3M_DIPOLES_H */

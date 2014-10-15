@@ -227,13 +227,13 @@ void calc_long_range_forces()
     break;
 #endif
   case DIPOLAR_ALL_WITH_ALL_AND_NO_REPLICA: 
-    dawaanr_calculations(1,0);
+    dawaanr_calculations(DIPOLAR_CALC_FORCE);
     break;
   case DIPOLAR_MDLC_DS:
     add_mdlc_force_corrections();
     //fall through 
   case DIPOLAR_DS: 
-    magnetic_dipolar_direct_sum_calculations(1,0);
+    magnetic_dipolar_direct_sum_calculations(DIPOLAR_CALC_FORCE);
     break;
   case DIPOLAR_NONE:
       break;
