@@ -135,8 +135,11 @@ void update_all_dipole_moments(MagnetizableParticlesConfig* C)
 //    //fall through 
   case DIPOLAR_P3M:
     dp3m_dipole_assign();
-    dp3m_calc_kspace_forces(1,0);
-    // ___ Do real spcae work missing
+    dp3m_calc_kspace_forces(DIPOLAR_CALC_LOCAL_FIELD);
+    // !!! Check that this also includes the surface torques
+    update_local_field_p3m_real_space_part();
+
+   
     break;
 #endif
   case DIPOLAR_ALL_WITH_ALL_AND_NO_REPLICA: 
@@ -171,6 +174,10 @@ void update_all_dipole_moments(MagnetizableParticlesConfig* C)
     }
   }
   change/=n;
+  
+  // If the p3m method is activated, recount the total dipole moment
+  if (coulomb.Dmethod = DIPOLAR_P3M)
+    dp3m_count_magnetic_particles();
 
   if (change <=C->max_change) 
    convergence=True;

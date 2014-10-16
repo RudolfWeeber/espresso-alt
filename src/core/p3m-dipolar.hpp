@@ -137,7 +137,7 @@ void dp3m_set_bjerrum(void);
 int dp3m_adaptive_tune(char **log);
 
 /** compute the k-space part of forces and energies for the magnetic dipole-dipole interaction  */
-double dp3m_calc_kspace_forces(int force_flag, int energy_flag);
+double dp3m_calc_kspace_forces(int mode);
 
 
 /** Calculate number of magnetic  particles, the sum of the squared

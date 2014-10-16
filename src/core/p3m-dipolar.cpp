@@ -47,6 +47,7 @@
 #include "thermostat.hpp"
 #include "cells.hpp"
 #include "tuning.hpp"
+#include "magnetizable_particles.hpp"
 
 #ifdef DP3M
 
@@ -171,7 +172,7 @@ static double dp3m_k_space_error(double box_size, double prefac, int mesh, int c
 
 
 /* Compute the dipolar surface terms */
-static double calc_surface_term(int force_flag, int energy_flag);
+static double calc_surface_term(int mode);
 
 
 /** \name P3M Tuning Functions (private)*/
@@ -778,7 +779,7 @@ void dp3m_shrink_wrap_dipole_grid(int n_dipoles) {
 
 #ifdef ROTATION
 /* assign the torques obtained from k-space */
-static void P3M_assign_torques(double prefac, int d_rs)
+static void P3M_assign_torques(double prefac, int d_rs,int mode)
 {
   Cell *cell;
   Particle *p;
@@ -812,16 +813,38 @@ Since the torque is the dipole moment cross-product with E, we have:
 */
               switch (d_rs) {
 		case 0:	//E_x
-		  p[i].f.torque[1] -= p[i].r.dip[2]*prefac*dp3m.ca_frac[cf_cnt]*dp3m.rs_mesh[q_ind];     
-		  p[i].f.torque[2] += p[i].r.dip[1]*prefac*dp3m.ca_frac[cf_cnt]*dp3m.rs_mesh[q_ind]; 
+		  if (mode & DIPOLAR_CALC_FORCE)
+		  {
+		   p[i].f.torque[1] -= p[i].r.dip[2]*prefac*dp3m.ca_frac[cf_cnt]*dp3m.rs_mesh[q_ind];     
+		   p[i].f.torque[2] += p[i].r.dip[1]*prefac*dp3m.ca_frac[cf_cnt]*dp3m.rs_mesh[q_ind]; 
+		  }
+		  else
+		  if (mode & DIPOLAR_CALC_LOCAL_FIELD)
+		   // !!! Put code to assign local field for particle p[i] in the x coordinate
+		   // local_field[p[i].p.identity][0] += ...
 		  break;
 		case 1:	//E_y
-		  p[i].f.torque[0] += p[i].r.dip[2]*prefac*dp3m.ca_frac[cf_cnt]*dp3m.rs_mesh[q_ind];  
-		  p[i].f.torque[2] -= p[i].r.dip[0]*prefac*dp3m.ca_frac[cf_cnt]*dp3m.rs_mesh[q_ind];  
+		  if (mode & DIPOLAR_CALC_FORCE)
+		  {
+		    p[i].f.torque[0] += p[i].r.dip[2]*prefac*dp3m.ca_frac[cf_cnt]*dp3m.rs_mesh[q_ind];  
+		    p[i].f.torque[2] -= p[i].r.dip[0]*prefac*dp3m.ca_frac[cf_cnt]*dp3m.rs_mesh[q_ind];  
+		  }
+		  else
+		  if (mode & DIPOLAR_CALC_LOCAL_FIELD)
+		   // !!! Put code to assign local field for particle p[i] in the y coordinate
+		  
 		  break;
 		case 2:	//E_z
-		  p[i].f.torque[0] -= p[i].r.dip[1]*prefac*dp3m.ca_frac[cf_cnt]*dp3m.rs_mesh[q_ind];  
-		  p[i].f.torque[1] += p[i].r.dip[0]*prefac*dp3m.ca_frac[cf_cnt]*dp3m.rs_mesh[q_ind];  
+		  if (mode & DIPOLAR_CALC_FORCE)
+		  {
+		    p[i].f.torque[0] -= p[i].r.dip[1]*prefac*dp3m.ca_frac[cf_cnt]*dp3m.rs_mesh[q_ind];  
+		    p[i].f.torque[1] += p[i].r.dip[0]*prefac*dp3m.ca_frac[cf_cnt]*dp3m.rs_mesh[q_ind];  
+		  }
+		  else
+		  if (mode & DIPOLAR_CALC_LOCAL_FIELD)
+		   // !!! Put code to assign local field for particle p[i] in the z coordinate
+		  
+
 	      }
 	      q_ind++; 
 	      cf_cnt++;
@@ -890,7 +913,7 @@ static void dp3m_assign_forces_dip(double prefac, int d_rs)
 /*****************************************************************************/
 
 
-double dp3m_calc_kspace_forces(int force_flag, int energy_flag) 
+double dp3m_calc_kspace_forces(int mode)
 {
   int i,d,d_rs,ind,j[3];
   /**************************************************************/
@@ -900,7 +923,7 @@ double dp3m_calc_kspace_forces(int force_flag, int energy_flag)
   double k_space_energy_dip=0.0, node_k_space_energy_dip=0.0;
   double tmp0,tmp1;
 
-  P3M_TRACE(fprintf(stderr,"%d: dipolar p3m_perform(%d,%d): \n",this_node, force_flag, energy_flag));
+  P3M_TRACE(fprintf(stderr,"%d: dipolar p3m_perform(%d): \n",this_node, mode));
 
   dipole_prefac = coulomb.Dprefactor / (double)(dp3m.params.mesh[0]*dp3m.params.mesh[1]*dp3m.params.mesh[2]);
  
@@ -920,7 +943,7 @@ double dp3m_calc_kspace_forces(int force_flag, int energy_flag)
   P3M_TRACE(fprintf(stderr,"%d: dipolar p3m_perform: k-Space\n",this_node));
 
   /* === K Space Energy Calculation  === */
-  if(energy_flag) {
+  if(mode & DIPOLAR_CALC_ENERGY) {
 /*********************
    Dipolar energy
 **********************/
@@ -975,7 +998,7 @@ double dp3m_calc_kspace_forces(int force_flag, int energy_flag)
 } //if (energy_flag)
 
   /* === K Space Force Calculation  === */
-  if(force_flag) {
+  if((mode & DIPOLAR_CALC_FORCE) || (mode & DIPOLAR_CALC_LOCAL_FIELD) ) {
   /***************************        
    DIPOLAR TORQUES (k-space)
 ****************************/
@@ -1031,7 +1054,7 @@ double dp3m_calc_kspace_forces(int force_flag, int energy_flag)
       /* redistribute force component mesh */
       dp3m_spread_force_grid(dp3m.rs_mesh);  
       /* Assign force component from mesh to particle */
-      P3M_assign_torques(dipole_prefac*(2*PI/box_l[0]), d_rs);
+      P3M_assign_torques(dipole_prefac*(2*PI/box_l[0]), d_rs,mode);
     }
     P3M_TRACE(fprintf(stderr, "%d: done torque calculation.\n", this_node));
  #endif  /*if def ROTATION */ 
@@ -1039,7 +1062,12 @@ double dp3m_calc_kspace_forces(int force_flag, int energy_flag)
 /***************************
    DIPOLAR FORCES (k-space)
 ****************************/
+
+ if (mode & DIPOLAR_CALC_FORCES)
+ {
     P3M_TRACE(fprintf(stderr,"%d: dipolar p3m start forces calculation: k-Space\n",this_node));
+      
+      
 
 //Compute forces after torques because the algorithm below overwrites the grids dp3m.rs_mesh_dip !
 //Note: I'll do here 9 inverse FFTs. By symmetry, we can reduce this number to 6 !
@@ -1098,12 +1126,12 @@ double dp3m_calc_kspace_forces(int force_flag, int energy_flag)
    
        P3M_TRACE(fprintf(stderr,"%d: dipolar p3m end forces calculation: k-Space\n",this_node));
 
-   
+  } 
  } /* of if (dp3m.sum_mu2>0 */
-} /* of if(force_flag) */
+} //MODE & DIPOLAR_CALC_FOCE || MODE & DIPOLAR_CALC_LOCAL_FIELD
  
   if (dp3m.params.epsilon != P3M_EPSILON_METALLIC) {
-    surface_term = calc_surface_term(force_flag, energy_flag);
+    surface_term = calc_surface_term(mode);
     if(this_node == 0)
       k_space_energy_dip += surface_term;
    }
@@ -1116,7 +1144,7 @@ double dp3m_calc_kspace_forces(int force_flag, int energy_flag)
 
 /************************************************************/
 
-double calc_surface_term(int force_flag, int energy_flag)
+double calc_surface_term(int mode)
 {
  
   int np, c, i,ip=0,n_local_part=0;
@@ -1160,7 +1188,7 @@ double calc_surface_term(int force_flag, int energy_flag)
   
       MPI_Allreduce(MPI_IN_PLACE, a, 3, MPI_DOUBLE, MPI_SUM, comm_cart);
      
-     if (energy_flag) {
+     if (mode & DIPOLAR_CALC_ENERGY) {
       
         suma=0.0;
         for (i = 0; i < n_local_part; i++){
@@ -1173,7 +1201,7 @@ double calc_surface_term(int force_flag, int energy_flag)
         en = 0;
      } 
      #ifdef ROTATION	             
-     if (force_flag) {
+     if (mode & DIPOLAR_CALC_FORCE) {
           //fprintf(stderr," number of particles= %d ",n_part);   
 
           double *sumix = (double *) malloc(sizeof(double)*n_local_part);
@@ -1201,6 +1229,7 @@ double calc_surface_term(int force_flag, int energy_flag)
 		ip++;
  	     }	
           }
+	  // !!! Local field for the surface energy here.
           
 	     
 	  free(sumix);     

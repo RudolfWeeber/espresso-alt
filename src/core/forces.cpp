@@ -218,11 +218,11 @@ void calc_long_range_forces()
     dp3m_dipole_assign();
 #ifdef NPT
     if(integ_switch == INTEG_METHOD_NPT_ISO) {
-      nptiso.p_vir[0] += dp3m_calc_kspace_forces(1,1);
+      nptiso.p_vir[0] += dp3m_calc_kspace_forces(DIPOLAR_CALC_ENERGY & DIPOLAR_CALC_FORCE);
       fprintf(stderr,"dipolar_P3M at this moment is added to p_vir[0]\n");    
     } else
 #endif
-      dp3m_calc_kspace_forces(1,0);
+      dp3m_calc_kspace_forces(DIPOLAR_CALC_FORCE);
     
     break;
 #endif
