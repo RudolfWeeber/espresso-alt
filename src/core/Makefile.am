@@ -154,6 +154,7 @@ libEspresso_la_SOURCES += \
 	debye_hueckel.cpp debye_hueckel.hpp \
 	elc.cpp elc.hpp \
 	magnetic_non_p3m_methods.cpp magnetic_non_p3m_methods.hpp \
+	magnetizable_particles.cpp magnetizable_particles.hpp \
 	mdlc_correction.cpp  mdlc_correction.hpp \
 	maggs.cpp maggs.hpp \
 	mmm1d.cpp mmm1d.hpp \
