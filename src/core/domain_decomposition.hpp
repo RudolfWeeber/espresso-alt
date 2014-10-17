@@ -198,6 +198,10 @@ void dd_exchange_and_sort_particles(int global_flag);
 /** implements \ref CellStructure::position_to_cell. */
 Cell *dd_position_to_cell(double pos[3]);
 
+/** converts a position to the indices of the corresponding cell in the domain decomposition */
+void dd_position_to_cell_indices(double pos[3],int* idx);
+
+
 /** calculate physical (processor) minimal number of cells */
 int calc_processor_min_num_cells();
 
