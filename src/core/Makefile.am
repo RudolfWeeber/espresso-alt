@@ -125,7 +125,8 @@ libEspresso_la_SOURCES += \
 	soft_sphere.cpp soft_sphere.hpp \
 	steppot.cpp steppot.hpp \
 	tab.cpp tab.hpp \
-	tunable_slip.cpp tunable_slip.hpp
+	tunable_slip.cpp tunable_slip.hpp\
+	ThreeParticleNonBondedInteractions.cpp ThreeParticleNonBondedInteractions.hpp 
 
 # bonded potentials and forces
 libEspresso_la_SOURCES += \

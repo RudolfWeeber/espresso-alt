@@ -76,6 +76,8 @@
 #ifdef ELECTROSTATICS
 #include "bonded_coulomb.hpp"
 #endif
+#include "ThreeParticleNonBondedInteractions.hpp"
+#include <vector>
 
 using namespace std;
 
@@ -425,6 +427,19 @@ inline void add_non_bonded_pair_force(Particle *p1, Particle *p2,
   if (collision_params.mode > 0)
     detect_collision(p1,p2);
 #endif
+
+  // Handle three-particle non-bonded interactions
+  if (threeParticleNonBondedInteractions.size()>0)
+  {
+    // Get list of particles which form a triplet with the given two particles
+    std::vector<Particle*> p3list= search_for_third_particle(p1,p2);
+    
+    for (std::vector<Particle*>::iterator p3=p3list.begin(); p3!=p3list.end() ; p3++)
+    {
+      threeParticleNonBondedInteractions.add_forces(p1,p2,*p3);
+    }
+  }
+
 
   FORCE_TRACE(fprintf(stderr, "%d: interaction %d<->%d dist %f\n", this_node, p1->p.identity, p2->p.identity, dist));
 

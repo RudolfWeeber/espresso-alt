@@ -60,6 +60,7 @@
 #include "magnetic_non_p3m_methods.hpp"
 #include "mdlc_correction.hpp"
 #include "initialize.hpp"
+#include "ThreeParticleNonBondedInteractions.hpp"
 
 /****************************************
  * variables
@@ -624,6 +625,9 @@ static void recalc_maximal_cutoff_nonbonded()
       }
 #endif
 
+ // Cut-off for three particle non-bonded interactions
+ max_cut_current =max(max_cut_current,threeParticleNonBondedInteractions.max_cut_off());
+
       IA_parameters *data_sym = get_ia_param(j, i);
 
       /* no interaction ever touched it, at least no real
@@ -657,6 +661,7 @@ void recalc_maximal_cutoff()
     max_cut = max_cut_nonbonded;
   else
     max_cut = max_cut_bonded;
+
 }
 
 const char *get_name_of_bonded_ia(BondedInteraction type) {
