@@ -64,6 +64,11 @@ std::vector<Particle*> search_for_third_particle(Particle* p1, Particle* p2)
   		   continue;
   	       }
 
+	       // To prevent double counting of triplets, we skip all those where the id of the 
+	       // 3rd particle is not larger than the id of the first two.
+	       if ((P->p.identity <p1->p.identity) || (P->p.identity< p2->p.identity))
+  	         continue;
+
 	       // Add Particle P to result list
 	       res.push_back(P);
            } // Cell loop
