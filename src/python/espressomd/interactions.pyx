@@ -347,7 +347,6 @@ cdef class BondedInteraction(object):
 
 
 
-# Fene bond
 
 class FeneBond(BondedInteraction):
 
@@ -374,7 +373,7 @@ class FeneBond(BondedInteraction):
        "r_0":bonded_ia_params[self._bondId].p.fene.r0}
 
   def _setParamsInEsCore(self):
-   fene_set_params(self._bondId,self._params["k"],self._params["d_r_max"],self._params["r_0"])
+    fene_set_params(self._bondId,self._params["k"],self._params["d_r_max"],self._params["r_0"])
 
 
 class HarmonicBond(BondedInteraction):
@@ -400,7 +399,7 @@ class HarmonicBond(BondedInteraction):
        "r_cut":bonded_ia_params[self._bondId].p.harmonic.r_cut}
 
   def _setParamsInEsCore(self):
-   harmonic_set_params(self._bondId,self._params["k"],self._params["r_0"],self._params["r_cut"])
+    harmonic_set_params(self._bondId,self._params["k"],self._params["r_0"],self._params["r_cut"])
    
 
 class Dihedral(BondedInteraction):
@@ -426,7 +425,7 @@ class Dihedral(BondedInteraction):
        "phase":bonded_ia_params[self._bondId].p.dihedral.phase}
 
   def _setParamsInEsCore(self):
-   dihedral_set_params(self._bondId,self._params["mult"],self._params["bend"],self._params["phase"])
+    dihedral_set_params(self._bondId,self._params["mult"],self._params["bend"],self._params["phase"])
    
    
 class Subt_Lj(BondedInteraction):
@@ -443,7 +442,7 @@ class Subt_Lj(BondedInteraction):
     return "r", "k"
 
   def setDefaultParams(self):
-    self._params = {"k":"0", "r":0} 
+    self._params = {"k":0, "r":0} 
 
   def _getParamsFromEsCore(self):
     return \
@@ -468,7 +467,7 @@ class Angle_Harmonic(BondedInteraction):
     return "bend", "phi0"
 
   def setDefaultParams(self):
-    self._params = {"bend":"0", "phi0":0} 
+    self._params = {"bend":0, "phi0":0} 
 
   def _getParamsFromEsCore(self):
     return \
@@ -476,7 +475,7 @@ class Angle_Harmonic(BondedInteraction):
        "phi0":bonded_ia_params[self._bondId].p.angle_harmonic.phi0}
 
   def _setParamsInEsCore(self):
-   angle_harmonic_set_params(self._bondId,self._params["bend"],self._params["phi0"])
+    angle_harmonic_set_params(self._bondId,self._params["bend"],self._params["phi0"])
    
    
 class Angle_Cosine(BondedInteraction):
@@ -493,7 +492,7 @@ class Angle_Cosine(BondedInteraction):
     return "bend", "phi0"
 
   def setDefaultParams(self):
-    self._params = {"bend":"0", "phi0":0} 
+    self._params = {"bend":0, "phi0":0} 
 
   def _getParamsFromEsCore(self):
     return \
@@ -501,7 +500,7 @@ class Angle_Cosine(BondedInteraction):
        "phi0":bonded_ia_params[self._bondId].p.angle_cosine.phi0}
 
   def _setParamsInEsCore(self):
-   angle_cosine_set_params(self._bondId,self._params["bend"],self._params["phi0"])
+    angle_cosine_set_params(self._bondId,self._params["bend"],self._params["phi0"])
    
    
 class Angle_Cossquare(BondedInteraction):
@@ -518,7 +517,7 @@ class Angle_Cossquare(BondedInteraction):
     return "bend", "phi0"
 
   def setDefaultParams(self):
-    self._params = {"bend":"0", "phi0":0} 
+    self._params = {"bend":0, "phi0":0} 
 
   def _getParamsFromEsCore(self):
     return \
@@ -526,44 +525,163 @@ class Angle_Cossquare(BondedInteraction):
        "phi0":bonded_ia_params[self._bondId].p.angle_cossquare.phi0}
 
   def _setParamsInEsCore(self):
-   angle_cossquare_set_params(self._bondId,self._params["bend"],self._params["phi0"])
+    angle_cossquare_set_params(self._bondId,self._params["bend"],self._params["phi0"])
    
    
-
-class Angledist(BondedInteraction):
+class Stretching_Force(BondedInteraction):
   def typeNumber(self):
-    return 4
+    return 16
 
   def typeName(self): 
-    return "ANGLEDIST"
+    return "STRETCHING_FORCE"
 
   def validKeys(self):
-    return "bend", "phimin", "distmin", "phimax", "distmax", "cos_phi0", "sin_phi0"
+    return "r0", "ks"
 
   def requiredKeys(self): 
-    return "bend", "phimin", "distmin", "phimax", "distmax"
+    return "r0", "ks"
 
   def setDefaultParams(self):
-    self._params = {"bend":"0", "phimin":0, "distmin":0, "phimax":3.2, "distmax":5, "cos_phi0":1, "sin_phi0":0} 
+    self._params = {"r0":1., "ks":0} 
 
   def _getParamsFromEsCore(self):
     return \
-      {"bend":bonded_ia_params[self._bondId].p.angledist.bend,\
-       "phimin":bonded_ia_params[self._bondId].p.angledist.phimin,\
-       "distmin":bonded_ia_params[self._bondId].p.angledist.distmin,\
-       "phimax":bonded_ia_params[self._bondId].p.angledist.phimax,\
-       "distmax":bonded_ia_params[self._bondId].p.angledist.distmax,
-       "sin_phi0":bonded_ia_params[self._bondId].p.angledist.sin_phi0,
-       "cos_phi0":bonded_ia_params[self._bondId].p.angledist.cos_phi0}
+      {"r0":bonded_ia_params[self._bondId].p.stretching_force.r0,\
+       "ks":bonded_ia_params[self._bondId].p.stretching_force.ks}
 
   def _setParamsInEsCore(self):
-   angledist_set_params(self._bondId,self._params["bend"],self._params["phimin"],\
-                  self._params["distmin"],self._params["phimax"],self._params["distmax"])
+    stretching_force_set_params(self._bondId,self._params["r0"],self._params["ks"])
+   
+   
+class Area_Force_Local(BondedInteraction):
+  def typeNumber(self):
+    return 17
+
+  def typeName(self): 
+    return "AREA_FORCE_LOCAL"
+
+  def validKeys(self):
+    return "A0_l", "ka_l"
+
+  def requiredKeys(self): 
+    return "A0_l", "ka_l"
+
+  def setDefaultParams(self):
+    self._params = {"A0_l":1., "ka_l":0} 
+
+  def _getParamsFromEsCore(self):
+    return \
+      {"A0_l":bonded_ia_params[self._bondId].p.area_force_local.A0_l,\
+       "ka_l":bonded_ia_params[self._bondId].p.area_force_local.ka_l}
+
+  def _setParamsInEsCore(self):
+    area_force_local_set_params(self._bondId,self._params["A0_l"],self._params["ka_l"])
+   
+   
+class Bending_Force(BondedInteraction):
+  def typeNumber(self):
+    return 18
+
+  def typeName(self): 
+    return "BENDING_FORCE"
+
+  def validKeys(self):
+    return "phi0", "kb"
+
+  def requiredKeys(self): 
+    return "phi0", "kb"
+
+  def setDefaultParams(self):
+    self._params = {"phi0":1., "kb":0} 
+
+  def _getParamsFromEsCore(self):
+    return \
+      {"phi0":bonded_ia_params[self._bondId].p.bending_force.phi0,\
+       "kb":bonded_ia_params[self._bondId].p.bending_force.kb}
+
+  def _setParamsInEsCore(self):
+    bending_force_set_params(self._bondId,self._params["phi0"],self._params["kb"])
+   
+   
+class Volume_Force(BondedInteraction):
+  def typeNumber(self):
+    return 19
+
+  def typeName(self): 
+    return "VOLUME_FORCE"
+
+  def validKeys(self):
+    return "V0", "kv"
+
+  def requiredKeys(self): 
+    return "V0", "kv"
+
+  def setDefaultParams(self):
+    self._params = {"V0":1., "kv":0} 
+
+  def _getParamsFromEsCore(self):
+    return \
+      {"V0":bonded_ia_params[self._bondId].p.volume_force.V0,\
+       "kv":bonded_ia_params[self._bondId].p.volume_force.kv}
+
+  def _setParamsInEsCore(self):
+    volume_force_set_params(self._bondId,self._params["V0"],self._params["kv"])
+   
+   
+class Area_Force_Global(BondedInteraction):
+  def typeNumber(self):
+    return 20
+
+  def typeName(self): 
+    return "AREA_FORCE_GLOBAL"
+
+  def validKeys(self):
+    return "A0_g", "ka_g"
+
+  def requiredKeys(self): 
+    return "A0_g", "ka_g"
+
+  def setDefaultParams(self):
+    self._params = {"A0_g":1., "ka_g":0} 
+
+  def _getParamsFromEsCore(self):
+    return \
+      {"A0_g":bonded_ia_params[self._bondId].p.area_force_global.A0_g,\
+       "ka_g":bonded_ia_params[self._bondId].p.area_force_global.ka_g}
+
+  def _setParamsInEsCore(self):
+    area_force_global_set_params(self._bondId,self._params["A0_g"],self._params["ka_g"])
+   
+   
+class Stretchlin_Force(BondedInteraction):
+  def typeNumber(self):
+    return 21
+
+  def typeName(self): 
+    return "STRETCHLIN_FORCE"
+
+  def validKeys(self):
+    return "r0", "kslin"
+
+  def requiredKeys(self): 
+    return "r0", "kslin"
+
+  def setDefaultParams(self):
+    self._params = {"r0":1., "kslin":0} 
+
+  def _getParamsFromEsCore(self):
+    return \
+      {"r0":bonded_ia_params[self._bondId].p.stretchlin_force.r0,\
+       "kslin":bonded_ia_params[self._bondId].p.stretchlin_force.kslin}
+
+  def _setParamsInEsCore(self):
+    stretchlin_force_set_params(self._bondId,self._params["r0"],self._params["kslin"])
     
 
 
 bondedInteractionClasses = {0:FeneBond, 1:HarmonicBond, 5:Dihedral, 7:Subt_Lj, 13:Angle_Harmonic,\
-     14:Angle_Cosine, 15:Angle_Cossquare}#, 4:Angledist}
+     14:Angle_Cosine, 15:Angle_Cossquare, 16:Stretching_Force, 17:Area_Force_Local, 18:Bending_Force,\
+     19:Volume_Force, 20:Area_Force_Global, 21:Stretchlin_Force}
 
 
 
@@ -586,9 +704,9 @@ class BondedInteractions:
       raise ValueError("The bonded interaction with the id "+str(key)+" is not yet defined.")
 
     # Find the appropriate class representing such a bond
-    print bondType, "   ", bonded_ia_params[key].type
+    bondClass = bondedInteractionClasses[bondType]
+    print bondType
     print "  "
-    bondClass =bondedInteractionClasses[bondType]
 
     # And return an instance of it, which refers to the bonded interaction id in Espresso
     return bondClass(key)
