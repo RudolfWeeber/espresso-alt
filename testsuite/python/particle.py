@@ -18,9 +18,11 @@
 #  
 # Tests particle property setters/getters
 import unittest as ut
-import espresso.System as es
+import espressomd
+import espressomd._system as es
 import numpy as np
-from espresso.interactions import FeneBond
+from espressomd.interactions import FeneBond
+
 
 
 
@@ -56,9 +58,11 @@ class ParticleProperties(ut.TestCase):
 
 
   def setUp(self):
-    es.part[self.pid].pos =0,0,0
-    es.bondedInter[0]=FeneBond(k=1,d_r_max=5)
-    es.bondedInter[1]=FeneBond(k=1,d_r_max=5)
+    bla = es.System
+    print bla.doge
+    bla.bondedInter[0]=FeneBond(k=1,d_r_max=5)
+    es.System.bondedInter[0]=FeneBond(k=1,d_r_max=5)
+    es.System.bondedInter[1]=FeneBond(k=1,d_r_max=5)
 
   def generateTestForVectorProperty(_propName,_value):
     """Generates test cases for vectorial particle properties such as
@@ -74,9 +78,9 @@ class ParticleProperties(ut.TestCase):
       # This code is run at the execution of the generated function.
       # It will use the state of the variables in the outer function, 
       # which was there, when the outer function was called
-      setattr(es.part[self.pid],propName,value)
-      print(propName,value,getattr(es.part[self.pid],propName))
-      self.assertTrue(self.arraysNearlyEqual(getattr(es.part[self.pid],propName), value),propName+": value set and value gotten back differ.")
+      setattr(es.System.part[self.pid],propName,value)
+      print(propName,value,getattr(es.System.part[self.pid],propName))
+      self.assertTrue(self.arraysNearlyEqual(getattr(es.System.part[self.pid],propName), value),propName+": value set and value gotten back differ.")
 
     return func
   
@@ -94,9 +98,9 @@ class ParticleProperties(ut.TestCase):
       # This code is run at the execution of the generated function.
       # It will use the state of the variables in the outer function, 
       # which was there, when the outer function was called
-      setattr(es.part[self.pid],propName,value)
-      print(propName,value,getattr(es.part[self.pid],propName))
-      self.assertTrue(getattr(es.part[self.pid],propName)==value,propName+": value set and value gotten back differ.")
+      setattr(es.System.part[self.pid],propName,value)
+      print(propName,value,getattr(es.System.part[self.pid],propName))
+      self.assertTrue(getattr(es.System.part[self.pid],propName)==value,propName+": value set and value gotten back differ.")
 
     return func
 

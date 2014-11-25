@@ -2022,6 +2022,17 @@ void pointer_to_mass(Particle* p, double*&  res)
   res=&(p->p.mass);
 }
 #endif
+#ifdef ROTATIONAL_INERTIA
+void pointer_to_rotational_inertia(Particle* p, double& res[3])
+{
+  res=&(p->p.rinertia);
+}
+#endif
+
+
+#ifdef ROTATIONAL_INERTIA
+
+#endif
 
 
 #ifdef DIPOLES

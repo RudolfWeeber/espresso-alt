@@ -25,12 +25,18 @@ import interactions
 cimport cuda_init
 import particle_data
 import cuda_init
+import code_info
+
 
 cdef class System:
-    def __init__(self):
-        self.part = particle_data.particleList()
-        self.nonBondedInter = interactions.NonBondedInteractions()
-        self.bondedInter = interactions.BondedInteractions()
+    doge = 1
+    part = particle_data.particleList()
+    nonBondedInter = interactions.NonBondedInteractions()
+    bondedInter = interactions.BondedInteractions()
+#    def __init__(self):
+#        self.part = particle_data.particleList()
+#        self.nonBondedInter = interactions.NonBondedInteractions()
+#        self.bondedInter = interactions.BondedInteractions()
 
     property box_l:
         def __set__(self, _box_l):

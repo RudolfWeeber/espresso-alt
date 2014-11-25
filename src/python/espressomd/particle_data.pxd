@@ -79,6 +79,8 @@ cdef extern from "particle_data.hpp":
   
   IF ROTATIONAL_INERTIA == 1:
     int set_particle_rotational_inertia(int part, double rinertia[3])
+    
+    pointer_to_rotational_inertia(Particle* p, double& res[3])
   
   IF ROTATION_PER_PARTICLE == 1:
     int set_particle_rotation(int part, int rot)
