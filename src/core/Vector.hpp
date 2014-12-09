@@ -31,7 +31,8 @@ public:
   };
 
   ~Vector() { 
-    delete[] d; 
+    if (d)
+      delete[] d; 
   }
 
   Vector(const Vector& rhs) : d(new Scalar[n]) {
